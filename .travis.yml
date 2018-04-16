@@ -1,0 +1,10 @@
+# set Java environment
+language: java
+
+# set build environment Ubuntu 14.04 LTS (Trusty Tahr)
+dist: trusty
+# disable 'sudo' mode (will run in container instead of VM)
+sudo: false
+
+# set JDK version
+jdk: oraclejdk8
