@@ -3,42 +3,38 @@ package org.boudnik.framework.test.testsuites;
 import org.boudnik.framework.Transaction;
 import org.boudnik.framework.test.core.TestEntry;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class CreateSaveTest {
 
+    @BeforeClass
+    public static void beforeAll(){
+        Transaction.instance().withCacheName(TestEntry.class);
+    }
+
     @Test
     public void testCreateSaveCommit() {
-
-        try (Transaction tx = Transaction.instance().withCacheName(TestEntry.class).tx(() ->
-                new TestEntry("testCreateSaveCommit").save()
-        )) {
-            System.out.println("tx = " + tx);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try (Transaction tx = Transaction.instance().withCacheName(TestEntry.class).tx()) {
-            TestEntry entry = tx.get(TestEntry.class, "testCreateSaveCommit");
-            Assert.assertNotNull(entry);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Transaction tx = Transaction.instance();
+        tx.txCommit(new TestEntry("testCreateSaveCommit"));
+        Assert.assertNotNull(tx.getAndClose(TestEntry.class, "testCreateSaveCommit"));
     }
 
     @Test
     public void testCreateSaveRollback() {
+        Transaction tx = Transaction.instance();
+        new TestEntry("testCreateSaveRollback").save();
+        tx.rollback();
+        Assert.assertNull(tx.getAndClose(TestEntry.class, "testCreateSaveRollback"));
+    }
 
-        try (Transaction tx = Transaction.instance().withCacheName(TestEntry.class).tx()) {
+    @Test
+    public void testCreateSaveRollbackViaException() {
+        Transaction tx = Transaction.instance();
+        tx.txCommit(() -> {
             new TestEntry("testCreateSaveRollback").save();
-            tx.rollback();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try (Transaction tx = Transaction.instance().withCacheName(TestEntry.class).tx()) {
-            TestEntry entry = tx.get(TestEntry.class, "testCreateSaveRollback");
-            Assert.assertNull(entry);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            throw new RuntimeException("Rollback Exception");
+        }, false);
+        Assert.assertNull(tx.getAndClose(TestEntry.class, "testCreateSaveRollback"));
     }
 }

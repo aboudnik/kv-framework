@@ -3,58 +3,53 @@ package org.boudnik.framework.test.testsuites;
 import org.boudnik.framework.Transaction;
 import org.boudnik.framework.test.core.TestEntry;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class CreateSaveDeleteTest {
 
+    @BeforeClass
+    public static void beforeAll(){
+        Transaction.instance().withCacheName(TestEntry.class);
+    }
+
     @Test
     public void testCommitDeleteCommit() {
-        try (Transaction tx = Transaction.instance().withCacheName(TestEntry.class).tx(() ->
-                new TestEntry("testCommitDeleteCommit").save()
-        )) {
-            System.out.println("tx = " + tx);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try (Transaction tx = Transaction.instance().withCacheName(TestEntry.class).tx()) {
+        Transaction tx = Transaction.instance();
+        tx.txCommit(new TestEntry("testCommitDeleteCommit"));
 
-            TestEntry entry = tx.get(TestEntry.class, "testCommitDeleteCommit");
-            Assert.assertNotNull(entry);
-            entry.delete();
-            tx.commit();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try (Transaction tx = Transaction.instance().withCacheName(TestEntry.class).tx()) {
-            TestEntry entry = tx.get(TestEntry.class, "testCommitDeleteCommit");
-            Assert.assertNull(entry);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        TestEntry entry = tx.get(TestEntry.class, "testCommitDeleteCommit");
+        Assert.assertNotNull(entry);
+
+        tx.txCommit(entry::delete);
+        Assert.assertNull(tx.getAndClose(TestEntry.class, "testCommitDeleteCommit"));
     }
 
     @Test
     public void testCommitDeleteRollback() {
-        try (Transaction tx = Transaction.instance().withCacheName(TestEntry.class).tx(() ->
-                new TestEntry("testCommitDeleteRollback").save()
-        )) {
-            System.out.println("tx = " + tx);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try (Transaction tx = Transaction.instance().withCacheName(TestEntry.class).tx()) {
-            TestEntry entry = tx.get(TestEntry.class, "testCommitDeleteRollback");
-            Assert.assertNotNull(entry);
+        Transaction tx = Transaction.instance();
+        tx.txCommit(new TestEntry("testCommitDeleteRollback"));
+
+        TestEntry entry = tx.get(TestEntry.class, "testCommitDeleteRollback");
+        Assert.assertNotNull(entry);
+
+        entry.delete();
+        tx.rollback();
+        Assert.assertNotNull(tx.getAndClose(TestEntry.class, "testCommitDeleteRollback"));
+    }
+
+    @Test
+    public void testCommitDeleteRollbackViaException() {
+        Transaction tx = Transaction.instance();
+        tx.txCommit(new TestEntry("testCommitDeleteRollback"));
+
+        TestEntry entry = tx.get(TestEntry.class, "testCommitDeleteRollback");
+        Assert.assertNotNull(entry);
+
+        tx.txCommit(() -> {
             entry.delete();
-            tx.rollback();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try (Transaction tx = Transaction.instance().withCacheName(TestEntry.class).tx()) {
-            TestEntry entry = tx.get(TestEntry.class, "testCommitDeleteRollback");
-            Assert.assertNotNull(entry);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            throw  new RuntimeException("RollbackException");
+        }, false);
+        Assert.assertNotNull(tx.getAndClose(TestEntry.class, "testCommitDeleteRollback"));
     }
 }

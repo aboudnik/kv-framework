@@ -3,48 +3,44 @@ package org.boudnik.framework.test.testsuites;
 import org.boudnik.framework.Transaction;
 import org.boudnik.framework.test.core.TestEntry;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class CreateDeleteTest {
 
+    @BeforeClass
+    public static void beforeAll(){
+        Transaction.instance().withCacheName(TestEntry.class);
+    }
+
     @Test
     public void testCreateDeleteCommit() {
-
-        try (Transaction tx = Transaction.instance().withCacheName(TestEntry.class).tx(() -> {
+        Transaction tx = Transaction.instance().txCommit(() -> {
             TestEntry te = new TestEntry("testCreateDeleteCommit");
             te.save();
             te.delete();
-        })) {
-            System.out.println("tx = " + tx);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try (Transaction tx = Transaction.instance().withCacheName(TestEntry.class).tx()) {
-            TestEntry entry = tx.get(TestEntry.class, "testCreateDeleteCommit");
-            Assert.assertNull(entry);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        });
+        Assert.assertNull(tx.getAndClose(TestEntry.class, "testCreateDeleteCommit"));
     }
 
     @Test
     public void testCreateDeleteRollback() {
+        Transaction tx = Transaction.instance();
+        TestEntry te = new TestEntry("testCreateDeleteRollback");
+        te.save();
+        te.delete();
+        tx.rollback();
+        Assert.assertNull(tx.getAndClose(TestEntry.class, "testCreateDeleteRollback"));
+    }
 
-        try (Transaction tx = Transaction.instance().withCacheName(TestEntry.class).tx())
-        {
+    @Test
+    public void testCreateDeleteRollbackViaException() {
+        Transaction tx = Transaction.instance().txCommit(() -> {
             TestEntry te = new TestEntry("testCreateDeleteRollback");
             te.save();
             te.delete();
-            tx.rollback();
-            System.out.println("tx = " + tx);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try (Transaction tx = Transaction.instance().withCacheName(TestEntry.class).tx()) {
-            TestEntry entry = tx.get(TestEntry.class, "testCreateDeleteRollback");
-            Assert.assertNull(entry);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            throw new RuntimeException("Rollback Exception");
+        }, false);
+        Assert.assertNull(tx.getAndClose(TestEntry.class, "testCreateDeleteRollback"));
     }
 }

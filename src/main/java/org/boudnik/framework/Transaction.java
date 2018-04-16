@@ -131,6 +131,12 @@ public class Transaction implements AutoCloseable {
         return scope.computeIfAbsent(clazz, k -> new HashMap<>());
     }
 
+    public <K, V extends OBJ> V getAndClose(Class<V> clazz, K identity) {
+        V value = get(clazz, identity);
+        close();
+        return value;
+    }
+
     @SuppressWarnings("unchecked")
     public <K, V extends OBJ> V get(Class<V> clazz, K identity) {
         Map<Object, OBJ> map = getMap(clazz);
@@ -189,10 +195,29 @@ public class Transaction implements AutoCloseable {
         return this;
     }
 
-    public Transaction tx(Transactionable transactionable) {
-        ignite.transactions().txStart();
-        transactionable.commit();
-        commit();
+    public Transaction txCommit(OBJ obj) {
+        return txCommit(obj, true);
+    }
+
+    public Transaction txCommit(OBJ obj, boolean reThrowExceptionIfHappened) {
+        return txCommit(obj::save, reThrowExceptionIfHappened);
+    }
+
+    public Transaction txCommit(Transactionable transactionable) {
+        return txCommit(transactionable, true);
+    }
+
+    public Transaction txCommit(Transactionable transactionable, boolean reThrowExceptionIfHappened) {
+        if(ignite.transactions().tx() == null)
+            ignite.transactions().txStart();
+        try {
+            transactionable.commit();
+            commit();
+        } catch (Exception e){
+            rollback();
+            if(reThrowExceptionIfHappened)
+                throw e;
+        }
         return this;
     }
 
