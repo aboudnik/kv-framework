@@ -1,4 +1,4 @@
 # simple yml
-language: java
-sudo: false
-script: mvn clean verify
+language: java
+sudo: true
+script: mvn clean verify 
