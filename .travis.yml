@@ -12,11 +12,11 @@ services:
   - docker
 
 before_script:
-  - "./docker/docker-start.sh"
+  - docker-compose -f ./docker/docker-compose.yml up
 
 # optional
 #after_script:
 #  - "./docker/docker-stop.sh"
 
 script:
-  - docker-compose.exe -f ./docker/docker-compose.yml logs
+  - docker-compose -f ./docker/docker-compose.yml logs
