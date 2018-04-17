@@ -2,7 +2,6 @@ package org.boudnik.framework.test.testsuites;
 
 import org.boudnik.framework.Transaction;
 import org.boudnik.framework.test.core.MutableTestEntry;
-import org.boudnik.framework.test.core.TestEntry;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -13,7 +12,7 @@ public class GetUpdateSaveDeleteTest {
 
     @BeforeClass
     public static void beforeAll(){
-        Transaction.instance().withCacheName(MutableTestEntry.class);
+        Transaction.instance().withCache(MutableTestEntry.class);
     }
 
     @Test

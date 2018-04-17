@@ -10,7 +10,7 @@ public class CreateSaveDeleteTest {
 
     @BeforeClass
     public static void beforeAll(){
-        Transaction.instance().withCacheName(TestEntry.class);
+        Transaction.instance().withCache(TestEntry.class);
     }
 
     @Test

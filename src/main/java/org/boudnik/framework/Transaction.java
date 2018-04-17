@@ -43,14 +43,9 @@ public class Transaction implements AutoCloseable {
         return TRANSACTION_THREAD_LOCAL.get();
     }
 
-    public Transaction withCacheName(Class clazz) {
-        Ignition.ignite().getOrCreateCache(clazz.getName());
-        return this;
-    }
-
-    public Transaction withCacheNames(Class... classes) {
+    public Transaction withCache(Class... classes) {
         for (Class clazz : classes) {
-            Ignition.ignite().getOrCreateCache(clazz.getName());
+            ignite.getOrCreateCache(clazz.getName());
         }
         return this;
     }

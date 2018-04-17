@@ -1,19 +1,15 @@
 package org.boudnik.framework.test.testsuites;
 
-import org.boudnik.framework.OBJ;
 import org.boudnik.framework.Transaction;
-import org.boudnik.framework.Transactionable;
-import org.boudnik.framework.test.core.ImplObject;
 import org.boudnik.framework.test.core.RefTestEntry;
 import org.boudnik.framework.test.core.TestEntry;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class CreateSaveRefTest {
     @BeforeClass
     public static void beforeAll() {
-        Transaction.instance().withCacheNames(RefTestEntry.class, TestEntry.class);
+        Transaction.instance().withCache(RefTestEntry.class, TestEntry.class);
     }
 
 //    @Test

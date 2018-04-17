@@ -14,7 +14,7 @@ public class GetUpdateSaveDeleteComplexEntryTest {
 
     @BeforeClass
     public static void beforeAll(){
-        Transaction.instance().withCacheName(ComplexTestEntry2.class);
+        Transaction.instance().withCache(ComplexTestEntry2.class);
     }
 
     @Test

@@ -12,7 +12,7 @@ public class GetUpdateSaveTest {
 
     @BeforeClass
     public static void beforeAll(){
-        try(Transaction ignored = Transaction.instance().withCacheName(MutableTestEntry.class)){}
+        try(Transaction ignored = Transaction.instance().withCache(MutableTestEntry.class)){}
     }
 
     @Test
