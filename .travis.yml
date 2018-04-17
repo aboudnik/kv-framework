@@ -14,9 +14,8 @@ services:
 before_script:
   - docker-compose -f ./docker/docker-compose.yml up
 
-# optional
-#after_script:
-#  - "./docker/docker-stop.sh"
+before_script:
+  - docker-compose -f ./docker/docker-compose.yml down
 
-script:
-  - docker-compose -f ./docker/docker-compose.yml logs
+#script:
+#  - docker-compose -f ./docker/docker-compose.yml logs
