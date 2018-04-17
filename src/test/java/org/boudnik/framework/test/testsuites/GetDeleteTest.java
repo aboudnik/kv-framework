@@ -38,7 +38,7 @@ public class GetDeleteTest {
         Assert.assertNotNull(tx.get(MutableTestEntry.class, "testGetDeleteRollback"));
     }
 
-    @Test
+    @Test(expected = RuntimeException.class)
     public void testGetDeleteRollbackViaException() {
         Transaction tx = Transaction.instance();
         tx.txCommit(new MutableTestEntry("testGetDeleteRollback"));
@@ -48,7 +48,7 @@ public class GetDeleteTest {
         tx.txCommit(() -> {
             entry.delete();
             throw new RuntimeException("Rollback Exception");
-            }, false);
+            });
 
         Assert.assertNotNull(tx.get(MutableTestEntry.class, "testGetDeleteRollback"));
     }

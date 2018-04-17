@@ -44,7 +44,7 @@ public class GetDeleteComplexEntryTest {
         Assert.assertNotNull(tx.getAndClose(ComplexTestEntry2.class, key));
     }
 
-    @Test
+    @Test(expected = RuntimeException.class)
     public void testGetDeleteRollbackViaExceptionComplexTestEntry2() {
         Transaction tx = Transaction.instance();
         ComplexTestEntry2 te = new ComplexTestEntry2(new ComplexTestEntry(new TestEntry("testCommitDeleteRollback")));
@@ -57,7 +57,7 @@ public class GetDeleteComplexEntryTest {
         tx.txCommit(() -> {
             entry.delete();
             throw  new RuntimeException("RollbackException");
-        }, false);
+        });
         Assert.assertNotNull(tx.getAndClose(ComplexTestEntry2.class, key));
     }
 }

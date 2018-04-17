@@ -196,18 +196,10 @@ public class Transaction implements AutoCloseable {
     }
 
     public Transaction txCommit(OBJ obj) {
-        return txCommit(obj, true);
-    }
-
-    public Transaction txCommit(OBJ obj, boolean reThrowExceptionIfHappened) {
-        return txCommit(obj::save, reThrowExceptionIfHappened);
+        return txCommit(obj::save);
     }
 
     public Transaction txCommit(Transactionable transactionable) {
-        return txCommit(transactionable, true);
-    }
-
-    public Transaction txCommit(Transactionable transactionable, boolean reThrowExceptionIfHappened) {
         if(ignite.transactions().tx() == null)
             ignite.transactions().txStart();
         try {
@@ -215,8 +207,7 @@ public class Transaction implements AutoCloseable {
             commit();
         } catch (Exception e){
             rollback();
-            if(reThrowExceptionIfHappened)
-                throw e;
+            throw new RuntimeException(e);
         }
         return this;
     }

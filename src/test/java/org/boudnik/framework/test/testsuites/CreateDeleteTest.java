@@ -33,14 +33,14 @@ public class CreateDeleteTest {
         Assert.assertNull(tx.getAndClose(TestEntry.class, "testCreateDeleteRollback"));
     }
 
-    @Test
+    @Test(expected = RuntimeException.class)
     public void testCreateDeleteRollbackViaException() {
         Transaction tx = Transaction.instance().txCommit(() -> {
             TestEntry te = new TestEntry("testCreateDeleteRollback");
             te.save();
             te.delete();
             throw new RuntimeException("Rollback Exception");
-        }, false);
+        });
         Assert.assertNull(tx.getAndClose(TestEntry.class, "testCreateDeleteRollback"));
     }
 }
