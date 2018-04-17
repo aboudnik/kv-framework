@@ -71,19 +71,19 @@ public class Transaction implements AutoCloseable {
 
     private void doPut(Class<? extends OBJ> clazz, Map<Object, OBJ> map) {
         IgniteCache<Object, BinaryObject> cache = cache(clazz);
-            Map<Object, BinaryObject> map2Cache = new HashMap<>();
-            for (Map.Entry<Object, OBJ> entry : map.entrySet()) {
-                OBJ obj = entry.getValue();
-                BinaryObject current = ignite.binary().toBinary(obj);
+        Map<Object, BinaryObject> map2Cache = new HashMap<>();
+        for (Map.Entry<Object, OBJ> entry : map.entrySet()) {
+            OBJ obj = entry.getValue();
+            BinaryObject current = ignite.binary().toBinary(obj);
 
-                BinaryObject memento = mementos.get(obj);
-                if (memento != null && !current.equals(memento)) {
-                    obj.onCommit(current, memento);
-                }
-                map2Cache.put(entry.getKey(), current);
+            BinaryObject memento = mementos.get(obj);
+            if (memento != null && !current.equals(memento)) {
+                obj.onCommit(current, memento);
             }
-            cache.putAll(map2Cache);
+            map2Cache.put(entry.getKey(), current);
         }
+        cache.putAll(map2Cache);
+    }
 
     private void doRemove(Class<? extends OBJ> clazz, Map<Object, OBJ> map) {
         cache(clazz).removeAll(map.keySet());
@@ -196,12 +196,12 @@ public class Transaction implements AutoCloseable {
     }
 
     public Transaction txCommit(Transactionable transactionable) {
-        if(ignite.transactions().tx() == null)
+        if (ignite.transactions().tx() == null)
             ignite.transactions().txStart();
         try {
             transactionable.commit();
             commit();
-        } catch (Exception e){
+        } catch (Exception e) {
             rollback();
             throw new RuntimeException(e);
         }
@@ -213,8 +213,8 @@ public class Transaction implements AutoCloseable {
         /**
          * Performs this operation on the given arguments.
          *
-         * @param c           class
-         * @param map         (key -> value)
+         * @param c   class
+         * @param map (key -> value)
          */
 //        <K, V>
         void accept(Class<? extends OBJ> c, Map<Object, OBJ> map);
