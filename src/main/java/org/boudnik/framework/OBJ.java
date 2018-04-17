@@ -49,9 +49,49 @@ public interface OBJ<K> extends Serializable {
     OBJ<Object> TOMBSTONE = new OBJ<Object>() {
     };
 
-    String REF = Implementation.REF.class.getName();
+    class REF<I, V extends OBJ<I>> {
+        private final Class<V> clazz;
+        private transient V reference;
 
+        private I identity;
+
+        public REF(Class<V> clazz) {
+            this.clazz = clazz;
+        }
+
+        public V get() {
+            if (reference == null) {
+                return this.reference = Transaction.instance().get(clazz, identity);
+            } else if (Transaction.instance().isDeleted(reference))
+                return null;
+            else
+                return reference;
+        }
+
+        public void set(V reference) {
+            setIdentity(reference == null ? null : reference.getKey());
+            setReference(reference);
+        }
+
+        private void setReference(V reference) {
+            this.reference = reference;
+        }
+
+        private void setIdentity(I identity) {
+            this.identity = identity;
+        }
+
+        @Override
+        public String toString() {
+            return "REF{" +
+                    "clazz=" + clazz +
+                    ", reference=" + reference +
+                    ", identity=" + identity +
+                    '}';
+        }
+    }
     abstract class Implementation<K> implements OBJ<K> {
+
 
         private transient K key;
 
@@ -68,51 +108,10 @@ public interface OBJ<K> extends Serializable {
         public void setKey(@NotNull K key) {
             this.key = key;
         }
-
-        public class REF<I, V extends OBJ<I>> {
-            private final Class<V> clazz;
-            private transient V reference;
-
-            private I identity;
-
-            public REF(Class<V> clazz) {
-                this.clazz = clazz;
-            }
-
-            public V get() {
-                if (reference == null) {
-                    return this.reference = Transaction.instance().get(clazz, identity);
-                } else if (Transaction.instance().isDeleted(reference))
-                    return null;
-                else
-                    return reference;
-            }
-
-            public void set(V reference) {
-                setIdentity(reference == null ? null : reference.getKey());
-                setReference(reference);
-            }
-
-            private void setReference(V reference) {
-                this.reference = reference;
-            }
-
-            private void setIdentity(I identity) {
-                this.identity = identity;
-            }
-
-            @Override
-            public String toString() {
-                return "REF{" +
-                        "clazz=" + clazz +
-                        ", reference=" + reference +
-                        ", identity=" + identity +
-                        '}';
-            }
-        }
     }
 
     abstract class Historical<K> extends Implementation<K> {
+        public static final String REF = Implementation.REF.class.getName();
         List<History> history = new ArrayList<>();
 
         public Historical(K key) {

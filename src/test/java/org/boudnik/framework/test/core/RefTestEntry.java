@@ -2,15 +2,22 @@ package org.boudnik.framework.test.core;
 
 import org.boudnik.framework.OBJ;
 
-public class RefTestEntry implements OBJ<OBJ.Implementation<String>.REF<String, TestEntry>> {
-    private Implementation<String>.REF<String, TestEntry> key;
+import java.util.HashMap;
+import java.util.Map;
 
-    public RefTestEntry(Implementation<String>.REF<String, TestEntry> key) {
+public class RefTestEntry implements OBJ<Integer> {
+    Map<Integer, String> m = new HashMap<>();
+
+    private final Integer key;
+    public final OBJ.REF<String, TestEntry> ref = new OBJ.REF<>(TestEntry.class);
+
+    public RefTestEntry(Integer key, TestEntry test) {
         this.key = key;
+        this.ref.set(test);
     }
 
     @Override
-    public Implementation<String>.REF<String, TestEntry> getKey() {
+    public Integer getKey() {
         return key;
     }
 }
