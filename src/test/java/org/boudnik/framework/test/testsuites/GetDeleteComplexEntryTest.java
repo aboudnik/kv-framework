@@ -12,7 +12,7 @@ public class GetDeleteComplexEntryTest {
 
     @BeforeClass
     public static void beforeAll(){
-        Transaction.instance().withCacheNames(ComplexTestEntry2.class);
+        Transaction.instance().withCache(ComplexTestEntry2.class);
     }
 
     @Test

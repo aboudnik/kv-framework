@@ -10,7 +10,7 @@ public class GetDeleteTest {
 
     @BeforeClass
     public static void beforeAll(){
-        Transaction.instance().withCacheName(MutableTestEntry.class);
+        Transaction.instance().withCache(MutableTestEntry.class);
     }
 
     @Test
