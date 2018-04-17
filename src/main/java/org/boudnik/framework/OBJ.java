@@ -101,6 +101,14 @@ public interface OBJ<K> extends Serializable {
                 this.identity = identity;
             }
 
+            @Override
+            public String toString() {
+                return "REF{" +
+                        "clazz=" + clazz +
+                        ", reference=" + reference +
+                        ", identity=" + identity +
+                        '}';
+            }
         }
     }
 
