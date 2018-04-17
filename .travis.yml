@@ -1,10 +1,22 @@
 # set Java environment
 language: java
+# set JDK version
+jdk: oraclejdk8
 
 # set build environment Ubuntu 14.04 LTS (Trusty Tahr)
 dist: trusty
-# disable 'sudo' mode (will run in container instead of VM)
-sudo: false
+# enable 'sudo' mode (need for Docker service)
+sudo: required
 
-# set JDK version
-jdk: oraclejdk8
+services:
+  - docker
+
+before_script:
+  - "./docker/docker-start.sh"
+
+# optional
+#after_script:
+#  - "./docker/docker-stop.sh"
+
+script:
+  - docker-compose.exe -f ./docker/docker-compose.yml logs
