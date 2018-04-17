@@ -21,8 +21,8 @@ public class CreateSaveRefTest {
         tx.txCommit(() -> {
             TestEntry te2 = new TestEntry("testCreateSaveCommit2");
             TestEntry te3 = new TestEntry("testCreateSaveCommit3");
-            OBJ.Implementation hist = new ImplObject("impl");
-            OBJ.Implementation.REF ref = hist.new REF(TestEntry.class);
+            OBJ.Implementation impl = new ImplObject("impl");
+            OBJ.Implementation.REF ref = impl.new REF(TestEntry.class);
             ref.set(te2);
             System.out.println("REF: " + ref);
             te2.save();
