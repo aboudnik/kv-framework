@@ -52,7 +52,7 @@ public class GetUpdateSaveDeleteTest {
         Assert.assertNull(entry.getValue());
     }
 
-    @Test
+    @Test(expected = RuntimeException.class)
     public void testGetUpdateSaveDeleteRollbackViaException() {
 
         Transaction tx = Transaction.instance();
@@ -67,7 +67,7 @@ public class GetUpdateSaveDeleteTest {
                     entry.save();
                     entry.delete();
                     throw new RuntimeException("Rollback Exception");
-                }, false);
+                });
         MutableTestEntry updatedEntry = tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteRollback");
         Assert.assertNotNull(updatedEntry);
         Assert.assertNull(updatedEntry.getValue());

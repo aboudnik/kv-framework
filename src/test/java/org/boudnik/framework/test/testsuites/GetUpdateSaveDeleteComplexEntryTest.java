@@ -62,7 +62,7 @@ public class GetUpdateSaveDeleteComplexEntryTest {
         Assert.assertNull(notUpdatedEntry.getKey().getValue());
     }
 
-    @Test
+    @Test(expected = RuntimeException.class)
     public void testGetUpdateSaveDeleteRollbackViaException() {
         Transaction tx = Transaction.instance();
         ComplexTestEntry2 te = new ComplexTestEntry2(new ComplexTestEntry(new TestEntry("testCommitDeleteRollback")));
@@ -78,7 +78,7 @@ public class GetUpdateSaveDeleteComplexEntryTest {
             entry.save();
             entry.delete();
             throw new RuntimeException("Rollback Exception");
-        }, false);
+        });
         ComplexTestEntry2 notUpdatedEntry = tx.getAndClose(ComplexTestEntry2.class, key);
         Assert.assertNull(notUpdatedEntry.getKey().getValue());
         Assert.assertNull(notUpdatedEntry.getValue());
