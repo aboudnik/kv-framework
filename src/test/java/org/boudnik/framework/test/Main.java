@@ -24,7 +24,6 @@ public class Main {
     public void main() {
         Transaction tx = Transaction.instance();
         tx.txCommit(() -> new TestEntry("http://localhost/1").save(""));
-        System.out.println("entry = " + tx.getAndClose(TestEntry.class, ""));
     }
 
     @Test
@@ -34,7 +33,6 @@ public class Main {
             executor.submit(() -> {
                 Transaction tx = Transaction.instance();
                 tx.txCommit(() -> new TestEntry("http://localhost/1").save(""));
-                System.out.println("txCommit = " + tx);
             });
         }
 
