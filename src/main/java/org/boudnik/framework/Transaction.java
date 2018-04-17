@@ -24,13 +24,14 @@ public class Transaction implements AutoCloseable {
     private final Map<OBJ, BinaryObject> mementos = new HashMap<>();
     private final Ignite ignite;
 
-    Transaction(Ignite ignite) {
+    private Transaction(Ignite ignite) {
         this.ignite = ignite;
     }
 
     public void commit() {
         try {
-            walk(this::doCommit);
+            walk(this::doPut);
+            walk(this::doRemove);
             ignite.transactions().tx().commit();
         } catch (Exception e) {
             e.printStackTrace();
@@ -68,11 +69,8 @@ public class Transaction implements AutoCloseable {
         mementos.clear();
     }
 
-    private void doCommit(Class<? extends OBJ> clazz, Map<Object, OBJ> map, boolean isTombstone) {
+    private void doPut(Class<? extends OBJ> clazz, Map<Object, OBJ> map) {
         IgniteCache<Object, BinaryObject> cache = cache(clazz);
-        if (isTombstone) {
-            cache.removeAll(map.keySet());
-        } else {
             Map<Object, BinaryObject> map2Cache = new HashMap<>();
             for (Map.Entry<Object, OBJ> entry : map.entrySet()) {
                 OBJ obj = entry.getValue();
@@ -86,9 +84,12 @@ public class Transaction implements AutoCloseable {
             }
             cache.putAll(map2Cache);
         }
+
+    private void doRemove(Class<? extends OBJ> clazz, Map<Object, OBJ> map) {
+        cache(clazz).removeAll(map.keySet());
     }
 
-    private void doRollback(@SuppressWarnings("unused") Class<? extends OBJ> clazz, @SuppressWarnings("unused") Map<Object, OBJ> map, @SuppressWarnings("unused") boolean isTombstone) {
+    private void doRollback(@SuppressWarnings("unused") Class<? extends OBJ> clazz, @SuppressWarnings("unused") Map<Object, OBJ> map) {
 /*
         for (@SuppressWarnings("unused") Map.Entry<OBJ, BinaryObject> memento : mementos.entrySet()) {
             BinaryObject binary = memento.getValue();
@@ -116,7 +117,7 @@ public class Transaction implements AutoCloseable {
 
             for (Map.Entry<Boolean, List<Map.Entry<Object, OBJ>>> entry : groups.entrySet()) {
                 worker.accept(byClass.getKey(), entry.getValue().stream().collect(
-                        Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b)), entry.getKey());
+                        Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b)));
             }
         }
     }
@@ -214,10 +215,9 @@ public class Transaction implements AutoCloseable {
          *
          * @param c           class
          * @param map         (key -> value)
-         * @param isTombstone == OBJ.TOMBSTONE or NOT
          */
 //        <K, V>
-        void accept(Class<? extends OBJ> c, Map<Object, OBJ> map, boolean isTombstone);
+        void accept(Class<? extends OBJ> c, Map<Object, OBJ> map);
 
     }
 }
