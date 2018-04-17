@@ -24,7 +24,6 @@ public class GetDeleteComplexEntryTest {
         ComplexTestEntry key = te.getKey();
         ComplexTestEntry2 entry = tx.get(ComplexTestEntry2.class, key);
         Assert.assertNotNull(entry);
-
         tx.txCommit(entry::delete);
         Assert.assertNull(tx.getAndClose(ComplexTestEntry2.class, key));
     }
