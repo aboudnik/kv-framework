@@ -6,7 +6,9 @@ import org.boudnik.framework.test.core.TestEntry;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 
 public class SaveDeleteRefTest {
 
@@ -18,22 +20,42 @@ public class SaveDeleteRefTest {
     }
 
     @Test
-    public void testSaveDelete() {
+    public void testSaveDeleteCommit() {
         Transaction tx = Transaction.instance();
         tx.txCommit(() -> {
-            TestEntry entry = new TestEntry("CreateSaveDeleteRef").save();
-            ref = new RefTestEntry(1, entry).save();
+            TestEntry entry = new TestEntry("CreateSaveDeleteCommitRef").save();
+            ref = new RefTestEntry("CreateSaveDeleteCommitRef", entry).save();
         });
 
         tx.txCommit(() -> {
-            TestEntry actual = tx.get(TestEntry.class, "CreateSaveDeleteRef");
+            TestEntry actual = tx.get(TestEntry.class, "CreateSaveDeleteCommitRef");
             actual.delete();
         });
 
+
+        assertNull(tx.get(TestEntry.class, "CreateSaveDeleteCommitRef"));
+        RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
+        assertNull(actualRef.getEntry());
+    }
+
+    @Test
+    public void testSaveDeleteRollback() {
+        Transaction tx = Transaction.instance();
         tx.txCommit(() -> {
-            assertNull(tx.get(TestEntry.class, "CreateSaveDeleteRef"));
+            TestEntry entry = new TestEntry("CreateSaveDeleteRollbackRef").save();
+            ref = new RefTestEntry("CreateSaveDeleteRollbackRef", entry).save();
+        });
+
+        TestEntry actual = tx.get(TestEntry.class, "CreateSaveDeleteRollbackRef");
+        actual.delete();
+        tx.rollback();
+
+        tx.txCommit(() -> {
+            TestEntry actualEntry = tx.get(TestEntry.class, "CreateSaveDeleteRollbackRef");
+            assertNotNull(actualEntry);
             RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
-            assertNull(actualRef.getEntry());
+            assertNotNull(actualRef);
+            assertSame(actualRef.getEntry(), actualEntry);
         });
     }
 }

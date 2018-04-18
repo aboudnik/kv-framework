@@ -7,12 +7,11 @@ import org.boudnik.framework.test.core.TestEntry;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
 public class SaveGetComplexRefTest {
-
-    private RefTestEntry ref;
-    private ComplexRefTestEntry complexRef;
 
     @BeforeClass
     public static void beforeAll() {
@@ -22,23 +21,44 @@ public class SaveGetComplexRefTest {
     @Test
     public void testSaveGetCommit() {
         Transaction tx = Transaction.instance();
+        TestEntry entry = new TestEntry("SaveGetCommitComplexRef");
+        RefTestEntry ref = new RefTestEntry("SaveGetCommitComplexRef", entry);
+        ComplexRefTestEntry complexRef = new ComplexRefTestEntry("SaveGetCommitComplexRef", ref);
         tx.txCommit(() -> {
-            TestEntry entry = new TestEntry("test").save();
-            ref = new RefTestEntry(1, entry).save();
-            complexRef = new ComplexRefTestEntry(1, ref).save();
-            assertSame(tx.get(TestEntry.class, "test"), entry);
+            entry.save();
+            ref.save();
+            complexRef.save();
+            assertSame(tx.get(TestEntry.class, "SaveGetCommitComplexRef"), entry);
             assertSame(ref.getEntry(), entry);
             assertSame(complexRef.getEntry(), ref);
         });
 
         tx.txCommit(() -> {
-            TestEntry actual = tx.get(TestEntry.class, "test");
+            TestEntry actual = tx.get(TestEntry.class, "SaveGetCommitComplexRef");
             TestEntry expected = ref.getEntry();
-            assertSame(actual, expected);
             RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
-            assertSame(actualRef.getEntry(), ref.getEntry());
             ComplexRefTestEntry actualComplexRef = tx.get(ComplexRefTestEntry.class, complexRef.getKey());
+            assertSame(actual, expected);
+            assertSame(actualRef.getEntry(), ref.getEntry());
             assertSame(actualComplexRef.getEntry().getEntry(), ref.getEntry());
         });
+    }
+
+    @Test
+    public void testSaveGetRollback() {
+        Transaction tx = Transaction.instance();
+        TestEntry entry = new TestEntry("SaveGetRollbackComplexRef").save();
+        RefTestEntry ref = new RefTestEntry("SaveGetRollbackComplexRef", entry).save();
+        ComplexRefTestEntry complexRef = new ComplexRefTestEntry("SaveGetRollbackComplexRef", ref).save();
+        assertSame(tx.get(TestEntry.class, "SaveGetRollbackComplexRef"), entry);
+        assertSame(ref.getEntry(), entry);
+        assertSame(complexRef.getEntry(), ref);
+        tx.rollback();
+
+        assertNull(tx.get(TestEntry.class, "SaveGetRollbackComplexRef"));
+        assertNull(tx.get(RefTestEntry.class, ref.getKey()));
+        assertNull(tx.get(ComplexRefTestEntry.class, complexRef.getKey()));
+        assertNull(ref.getEntry());
+        assertNull(complexRef.getEntry());
     }
 }

@@ -10,8 +10,6 @@ import static org.junit.Assert.*;
 
 public class SaveGetRefTest {
 
-    private RefTestEntry ref;
-
     @BeforeClass
     public static void beforeAll() {
         Transaction.instance().withCache(RefTestEntry.class, TestEntry.class);
@@ -20,19 +18,33 @@ public class SaveGetRefTest {
     @Test
     public void testSaveGetCommit() {
         Transaction tx = Transaction.instance();
+        TestEntry entry = new TestEntry("SaveGetCommitRef");
+        RefTestEntry ref = new RefTestEntry("SaveGetCommitRef", entry);
         tx.txCommit(() -> {
-            TestEntry entry = new TestEntry("test").save();
-            ref = new RefTestEntry(1, entry).save();
-            assertSame(tx.get(TestEntry.class, "test"), entry);
+            entry.save();
+            ref.save();
+            assertSame(tx.get(TestEntry.class, "SaveGetCommitRef"), entry);
             assertSame(ref.getEntry(), entry);
         });
 
         tx.txCommit(() -> {
-            TestEntry actual = tx.get(TestEntry.class, "test");
+            TestEntry actual = tx.get(TestEntry.class, "SaveGetCommitRef");
             TestEntry expected = ref.getEntry();
             assertSame(actual, expected);
             RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
             assertSame(actualRef.getEntry(), ref.getEntry());
         });
+    }
+
+    @Test
+    public void testSaveGetRollback() {
+        Transaction tx = Transaction.instance();
+        TestEntry entry = new TestEntry("SaveGetRollbackRef").save();
+        RefTestEntry ref = new RefTestEntry("SaveGetRollbackRef", entry).save();
+
+        tx.rollback();
+
+        assertNull(tx.get(TestEntry.class, "SaveGetRollbackRef"));
+        assertNull(tx.get(RefTestEntry.class, ref.getKey()));
     }
 }
