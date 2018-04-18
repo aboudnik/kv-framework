@@ -22,7 +22,6 @@ public interface OBJ<K> extends Serializable {
 //        throw new NoSuchElementException("setKey");
     }
 
-    @SuppressWarnings("unchecked")
     default <T> T save() {
         return (T) Transaction.instance().save(this);
     }
@@ -35,11 +34,11 @@ public interface OBJ<K> extends Serializable {
         Transaction.instance().delete(this);
     }
 
-    default void revert() {
-        Transaction.instance().revert(this);
-    }
+  //  default void revert() {
+  //      Transaction.instance().revert(this);
+  //  }
 
-    default void onCommit(BinaryObject current, BinaryObject memento) {
+    default void onCommit(Object current, Object memento) {
 
     }
 
@@ -47,8 +46,7 @@ public interface OBJ<K> extends Serializable {
 
     }
 
-    OBJ<Object> TOMBSTONE = new OBJ<Object>() {
-    };
+    OBJ<Object> TOMBSTONE = new OBJ<Object>(){} ;
 
     abstract class Implementation<K> implements OBJ<K> {
 
@@ -71,7 +69,7 @@ public interface OBJ<K> extends Serializable {
 
     }
 
-    abstract class Historical<K> extends Implementation<K> {
+/*    abstract class Historical<K> extends Implementation<K> {
         static final String REF = Implementation.REF.class.getName();
         List<History> history = new ArrayList<>();
 
@@ -104,7 +102,7 @@ public interface OBJ<K> extends Serializable {
 
     static Object getIdentity(Object o) {
         return ((BinaryObject) o).field("identity");
-    }
+    }*/
 
     class REF<I, V extends OBJ<I>> {
         private final Class<V> clazz;

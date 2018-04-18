@@ -1,6 +1,7 @@
 package org.boudnik.framework.test.testsuites;
 
 import org.boudnik.framework.Transaction;
+import org.boudnik.framework.TransactionFactory;
 import org.boudnik.framework.test.core.ComplexTestEntry;
 import org.boudnik.framework.test.core.ComplexTestEntry2;
 import org.boudnik.framework.test.core.TestEntry;
@@ -14,7 +15,7 @@ public class GetUpdateSaveDeleteComplexEntryTest {
 
     @BeforeClass
     public static void beforeAll(){
-        Transaction.instance().withCache(ComplexTestEntry2.class);
+        TransactionFactory.getInstance().getOrCreateIgniteTransaction().withCache(ComplexTestEntry2.class);
     }
 
     @Test

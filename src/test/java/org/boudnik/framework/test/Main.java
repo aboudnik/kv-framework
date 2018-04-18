@@ -1,6 +1,7 @@
 package org.boudnik.framework.test;
 
 import org.boudnik.framework.Transaction;
+import org.boudnik.framework.TransactionFactory;
 import org.boudnik.framework.test.core.TestEntry;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -17,7 +18,7 @@ public class Main {
 
     @BeforeClass
     public static void beforeAll(){
-        Transaction.instance().withCache(TestEntry.class);
+        TransactionFactory.getInstance().getOrCreateIgniteTransaction().withCache(TestEntry.class);
     }
 
     @Test
