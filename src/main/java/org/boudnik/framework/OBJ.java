@@ -27,8 +27,9 @@ public interface OBJ<K> extends Serializable {
         return (T) Transaction.instance().save(this);
     }
 
-    default void save(K key) {
-        Transaction.instance().save(this, key);
+    @SuppressWarnings("unchecked")
+    default <T> T save(K key) {
+        return (T) Transaction.instance().save(this, key);
     }
 
     default void delete() {

@@ -13,7 +13,7 @@ public class GetUpdateSaveDeleteComplexEntryTest {
     private static final String NEW_VALUE = "New Value";
 
     @BeforeClass
-    public static void beforeAll(){
+    public static void beforeAll() {
         Transaction.instance().withCache(ComplexTestEntry2.class);
     }
 
@@ -54,7 +54,8 @@ public class GetUpdateSaveDeleteComplexEntryTest {
 
         entry.setValue(NEW_VALUE);
         entry.getKey().setValue(NEW_VALUE);
-        entry.save();
+        ComplexTestEntry2 saveResult = entry.save();
+        Assert.assertNotNull(saveResult);
         entry.delete();
         tx.rollback();
         ComplexTestEntry2 notUpdatedEntry = tx.getAndClose(ComplexTestEntry2.class, key);
