@@ -10,7 +10,7 @@ public class CreateSaveDeleteTest {
 
     @BeforeClass
     public static void beforeAll(){
-        Transaction.instance().withCacheName(TestEntry.class);
+        Transaction.instance().withCache(TestEntry.class);
     }
 
     @Test
@@ -38,7 +38,7 @@ public class CreateSaveDeleteTest {
         Assert.assertNotNull(tx.getAndClose(TestEntry.class, "testCommitDeleteRollback"));
     }
 
-    @Test
+    @Test(expected = RuntimeException.class)
     public void testCommitDeleteRollbackViaException() {
         Transaction tx = Transaction.instance();
         tx.txCommit(new TestEntry("testCommitDeleteRollback"));
@@ -49,7 +49,7 @@ public class CreateSaveDeleteTest {
         tx.txCommit(() -> {
             entry.delete();
             throw  new RuntimeException("RollbackException");
-        }, false);
+        });
         Assert.assertNotNull(tx.getAndClose(TestEntry.class, "testCommitDeleteRollback"));
     }
 }

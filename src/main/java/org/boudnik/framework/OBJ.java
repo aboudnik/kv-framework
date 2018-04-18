@@ -22,8 +22,9 @@ public interface OBJ<K> extends Serializable {
 //        throw new NoSuchElementException("setKey");
     }
 
-    default void save() {
-        Transaction.instance().save(this);
+    @SuppressWarnings("unchecked")
+    default <T> T save() {
+        return (T) Transaction.instance().save(this);
     }
 
     default void save(K key) {
@@ -49,9 +50,8 @@ public interface OBJ<K> extends Serializable {
     OBJ<Object> TOMBSTONE = new OBJ<Object>() {
     };
 
-    String REF = Implementation.REF.class.getName();
-
     abstract class Implementation<K> implements OBJ<K> {
+
 
         private transient K key;
 
@@ -69,42 +69,10 @@ public interface OBJ<K> extends Serializable {
             this.key = key;
         }
 
-        public class REF<I, V extends OBJ<I>> {
-            private final Class<V> clazz;
-            private transient V reference;
-
-            private I identity;
-
-            public REF(Class<V> clazz) {
-                this.clazz = clazz;
-            }
-
-            public V get() {
-                if (reference == null) {
-                    return this.reference = Transaction.instance().get(clazz, identity);
-                } else if (Transaction.instance().isDeleted(reference))
-                    return null;
-                else
-                    return reference;
-            }
-
-            public void set(V reference) {
-                setIdentity(reference == null ? null : reference.getKey());
-                setReference(reference);
-            }
-
-            private void setReference(V reference) {
-                this.reference = reference;
-            }
-
-            private void setIdentity(I identity) {
-                this.identity = identity;
-            }
-
-        }
     }
 
     abstract class Historical<K> extends Implementation<K> {
+        static final String REF = Implementation.REF.class.getName();
         List<History> history = new ArrayList<>();
 
         public Historical(K key) {
@@ -136,5 +104,54 @@ public interface OBJ<K> extends Serializable {
 
     static Object getIdentity(Object o) {
         return ((BinaryObject) o).field("identity");
+    }
+
+    class REF<I, V extends OBJ<I>> {
+        private final Class<V> clazz;
+        private transient V reference;
+
+        private I identity;
+
+        public REF(Class<V> clazz) {
+            this.clazz = clazz;
+        }
+
+        /**
+         * Implements simple state machine; when reference not in scope, obtains it from store.
+         *
+         * @return cached {@link OBJ.REF#reference}
+         */
+        public V get() {
+            if (reference == null)
+                return identity == null ? null : (reference = Transaction.instance().get(clazz, identity));
+            V inScope = Transaction.instance().get(clazz, reference.getKey());
+            if (Transaction.isDeleted(inScope))
+                return null;
+            if (inScope != reference)
+                return reference = Transaction.instance().get(clazz, identity);
+            return reference;
+        }
+
+        public void set(V reference) {
+            setIdentity(reference == null ? null : reference.getKey());
+            setReference(reference);
+        }
+
+        private void setReference(V reference) {
+            this.reference = reference;
+        }
+
+        private void setIdentity(I identity) {
+            this.identity = identity;
+        }
+
+        @Override
+        public String toString() {
+            return "REF{" +
+                    "clazz=" + clazz +
+                    ", reference=" + reference +
+                    ", identity=" + identity +
+                    '}';
+        }
     }
 }

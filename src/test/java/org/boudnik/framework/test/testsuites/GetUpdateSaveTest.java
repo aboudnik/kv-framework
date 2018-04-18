@@ -12,7 +12,7 @@ public class GetUpdateSaveTest {
 
     @BeforeClass
     public static void beforeAll(){
-        try(Transaction ignored = Transaction.instance().withCacheName(MutableTestEntry.class)){}
+        try(Transaction ignored = Transaction.instance().withCache(MutableTestEntry.class)){}
     }
 
     @Test
@@ -46,7 +46,7 @@ public class GetUpdateSaveTest {
         Assert.assertNull(tx.get(MutableTestEntry.class, "testGetUpdateSaveRollback").getValue());
     }
 
-    @Test
+    @Test(expected = RuntimeException.class)
     public void testGetUpdateSaveRollbackViaException() {
         Transaction tx = Transaction.instance();
         tx.txCommit(new MutableTestEntry("testGetUpdateSaveRollback"));
@@ -59,7 +59,7 @@ public class GetUpdateSaveTest {
                     entry.setValue(NEW_VALUE);
                     entry.save();
                     throw new RuntimeException("Rollback Exception");
-                }, false);
+                });
         Assert.assertNull(tx.get(MutableTestEntry.class, "testGetUpdateSaveRollback").getValue());
     }
 }

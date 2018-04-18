@@ -10,7 +10,7 @@ public class CreateSaveTest {
 
     @BeforeClass
     public static void beforeAll(){
-        Transaction.instance().withCacheName(TestEntry.class);
+        Transaction.instance().withCache(TestEntry.class);
     }
 
     @Test
@@ -28,13 +28,13 @@ public class CreateSaveTest {
         Assert.assertNull(tx.getAndClose(TestEntry.class, "testCreateSaveRollback"));
     }
 
-    @Test
+    @Test(expected = RuntimeException.class)
     public void testCreateSaveRollbackViaException() {
         Transaction tx = Transaction.instance();
         tx.txCommit(() -> {
             new TestEntry("testCreateSaveRollback").save();
             throw new RuntimeException("Rollback Exception");
-        }, false);
+        });
         Assert.assertNull(tx.getAndClose(TestEntry.class, "testCreateSaveRollback"));
     }
 }

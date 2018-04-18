@@ -12,7 +12,7 @@ public class GetDeleteComplexEntryTest {
 
     @BeforeClass
     public static void beforeAll(){
-        Transaction.instance().withCacheNames(ComplexTestEntry2.class);
+        Transaction.instance().withCache(ComplexTestEntry2.class);
     }
 
     @Test
@@ -24,7 +24,6 @@ public class GetDeleteComplexEntryTest {
         ComplexTestEntry key = te.getKey();
         ComplexTestEntry2 entry = tx.get(ComplexTestEntry2.class, key);
         Assert.assertNotNull(entry);
-
         tx.txCommit(entry::delete);
         Assert.assertNull(tx.getAndClose(ComplexTestEntry2.class, key));
     }
@@ -44,7 +43,7 @@ public class GetDeleteComplexEntryTest {
         Assert.assertNotNull(tx.getAndClose(ComplexTestEntry2.class, key));
     }
 
-    @Test
+    @Test(expected = RuntimeException.class)
     public void testGetDeleteRollbackViaExceptionComplexTestEntry2() {
         Transaction tx = Transaction.instance();
         ComplexTestEntry2 te = new ComplexTestEntry2(new ComplexTestEntry(new TestEntry("testCommitDeleteRollback")));
@@ -57,7 +56,7 @@ public class GetDeleteComplexEntryTest {
         tx.txCommit(() -> {
             entry.delete();
             throw  new RuntimeException("RollbackException");
-        }, false);
+        });
         Assert.assertNotNull(tx.getAndClose(ComplexTestEntry2.class, key));
     }
 }
