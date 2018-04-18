@@ -3,11 +3,15 @@ package org.boudnik.framework.test.testsuites;
 import org.boudnik.framework.Transaction;
 import org.boudnik.framework.test.core.RefTestEntry;
 import org.boudnik.framework.test.core.TestEntry;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static org.junit.Assert.*;
+
 public class CreateSaveRefTest {
+
+    private RefTestEntry ref;
+
     @BeforeClass
     public static void beforeAll() {
         Transaction.instance().withCache(RefTestEntry.class, TestEntry.class);
@@ -16,18 +20,17 @@ public class CreateSaveRefTest {
     @Test
     public void testCreateSaveCommit() {
         Transaction tx = Transaction.instance();
-        final RefTestEntry[] ref = new RefTestEntry[1];
         tx.txCommit(() -> {
-            TestEntry entry = new TestEntry("test");
-            System.out.println("entry = " + entry);
-            entry.save();
-            ref[0] = new RefTestEntry(1, entry);
-            ref[0].save();
+            TestEntry entry = new TestEntry("test").save();
+            ref = new RefTestEntry(1, entry).save();
+            assertSame(tx.get(TestEntry.class, "test"), entry);
+            assertSame(ref.getEntry(), entry);
         });
-        RefTestEntry refTestEntry = tx.get(RefTestEntry.class, ref[0].getKey());
-        TestEntry test = tx.get(TestEntry.class, "test");
-        Assert.assertNotNull(refTestEntry);
-        Assert.assertNotNull(test);
-        Assert.assertEquals(refTestEntry.getRef().get().getKey(), test.getKey());
+
+        tx.txCommit(() -> {
+            TestEntry actual = tx.get(TestEntry.class, "test");
+            TestEntry expected = ref.getEntry();
+            assertSame(actual, expected);
+        });
     }
 }

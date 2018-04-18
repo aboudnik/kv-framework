@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * @author Alexandre_Boudnik
@@ -175,12 +176,13 @@ public class Transaction implements AutoCloseable {
             return obj;
     }
 
-    void save(OBJ obj) {
-        save(obj, obj.getKey());
+    OBJ save(OBJ obj) {
+        return save(obj, obj.getKey());
     }
 
-    void save(OBJ obj, Object key) {
+    OBJ save(OBJ obj, Object key) {
         getMap(obj.getClass()).put(key, obj);
+        return obj;
     }
 
     void delete(OBJ obj) {
@@ -203,8 +205,12 @@ public class Transaction implements AutoCloseable {
             rollback();
     }
 
-    <K, V extends OBJ<K>> boolean isDeleted(V reference) {
-        return OBJ.TOMBSTONE == getMap(reference.getClass()).get(reference.getKey());
+//    <K, V extends OBJ<K>> boolean isDeleted(V reference) {
+//        return OBJ.TOMBSTONE == getInScope(reference);
+//    }
+
+    static <K, V extends OBJ<K>> boolean isDeleted(V reference) {
+        return OBJ.TOMBSTONE == reference;
     }
 
     public Transaction tx() {
