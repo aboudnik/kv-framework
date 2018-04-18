@@ -15,7 +15,7 @@ public class GetDeleteComplexEntryTest {
 
     @BeforeClass
     public static void beforeAll(){
-        TransactionFactory.getInstance().getOrCreateIgniteTransaction(() -> Ignition.getOrStart(new IgniteConfiguration()), false).withCache(ComplexTestEntry2.class);
+        TransactionFactory.getInstance().getOrCreateIgniteTransaction(() -> Ignition.getOrStart(new IgniteConfiguration()), true).withCache(ComplexTestEntry2.class);
     }
 
     @Test

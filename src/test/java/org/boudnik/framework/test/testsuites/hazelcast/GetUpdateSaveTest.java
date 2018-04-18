@@ -1,6 +1,6 @@
 package org.boudnik.framework.test.testsuites.hazelcast;
 
-import org.boudnik.framework.Transaction;
+import com.hazelcast.core.Hazelcast;
 import org.boudnik.framework.TransactionFactory;
 import org.boudnik.framework.hazelcast.HazelcastTransaction;
 import org.boudnik.framework.test.core.MutableTestEntry;
@@ -15,7 +15,7 @@ public class GetUpdateSaveTest {
     @BeforeClass
     public static void beforeAll(){
         factory = TransactionFactory.getInstance();
-        Transaction.instance().close();
+        TransactionFactory.getInstance().getOrCreateHazelcastTransaction(Hazelcast::newHazelcastInstance, true);
     }
 
     @Test

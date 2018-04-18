@@ -15,7 +15,7 @@ public class GetUpdateSaveDeleteTest {
 
     @BeforeClass
     public static void beforeAll(){
-        TransactionFactory.getInstance().getOrCreateIgniteTransaction(() -> Ignition.getOrStart(new IgniteConfiguration()), false).withCache(MutableTestEntry.class);
+        TransactionFactory.getInstance().getOrCreateIgniteTransaction(() -> Ignition.getOrStart(new IgniteConfiguration()), true).withCache(MutableTestEntry.class);
     }
 
     @Test

@@ -17,7 +17,7 @@ public class CreateSaveRefTest {
 
     @BeforeClass
     public static void beforeAll() {
-        TransactionFactory.getInstance().getOrCreateIgniteTransaction(() -> Ignition.getOrStart(new IgniteConfiguration()), false).withCache(RefTestEntry.class, TestEntry.class);
+        TransactionFactory.getInstance().getOrCreateIgniteTransaction(() -> Ignition.getOrStart(new IgniteConfiguration()), true).withCache(RefTestEntry.class, TestEntry.class);
     }
 
     @Test
