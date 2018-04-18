@@ -1,5 +1,7 @@
 package org.boudnik.framework.test.testsuites;
 
+import org.apache.ignite.Ignition;
+import org.apache.ignite.configuration.IgniteConfiguration;
 import org.boudnik.framework.Transaction;
 import org.boudnik.framework.TransactionFactory;
 import org.boudnik.framework.test.core.MutableTestEntry;
@@ -13,7 +15,7 @@ public class GetUpdateSaveTest {
 
     @BeforeClass
     public static void beforeAll(){
-        try(Transaction ignored = TransactionFactory.getInstance().getOrCreateIgniteTransaction().withCache(MutableTestEntry.class)){}
+        TransactionFactory.getInstance().getOrCreateIgniteTransaction(() -> Ignition.getOrStart(new IgniteConfiguration()), false).withCache(MutableTestEntry.class);
     }
 
     @Test

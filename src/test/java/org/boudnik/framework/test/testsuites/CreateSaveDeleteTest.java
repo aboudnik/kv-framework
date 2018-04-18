@@ -1,5 +1,7 @@
 package org.boudnik.framework.test.testsuites;
 
+import org.apache.ignite.Ignition;
+import org.apache.ignite.configuration.IgniteConfiguration;
 import org.boudnik.framework.Transaction;
 import org.boudnik.framework.TransactionFactory;
 import org.boudnik.framework.test.core.TestEntry;
@@ -11,7 +13,7 @@ public class CreateSaveDeleteTest {
 
     @BeforeClass
     public static void beforeAll(){
-        TransactionFactory.getInstance().getOrCreateIgniteTransaction().withCache(TestEntry.class);
+        TransactionFactory.getInstance().getOrCreateIgniteTransaction(() -> Ignition.getOrStart(new IgniteConfiguration()), false).withCache(TestEntry.class);
     }
 
     @Test
