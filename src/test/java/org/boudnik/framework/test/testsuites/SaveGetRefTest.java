@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class CreateSaveRefTest {
+public class SaveGetRefTest {
 
     private RefTestEntry ref;
 
@@ -18,7 +18,7 @@ public class CreateSaveRefTest {
     }
 
     @Test
-    public void testCreateSaveCommit() {
+    public void testSaveGetCommit() {
         Transaction tx = Transaction.instance();
         tx.txCommit(() -> {
             TestEntry entry = new TestEntry("test").save();
@@ -31,6 +31,8 @@ public class CreateSaveRefTest {
             TestEntry actual = tx.get(TestEntry.class, "test");
             TestEntry expected = ref.getEntry();
             assertSame(actual, expected);
+            RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
+            assertSame(actualRef.getEntry(), ref.getEntry());
         });
     }
 }
