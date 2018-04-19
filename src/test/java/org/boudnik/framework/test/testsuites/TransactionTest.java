@@ -24,7 +24,7 @@ public class TransactionTest {
                 break;
             }
             case HAZELCAST: {
-                TransactionFactory.<HazelcastTransaction>getOrCreateTransaction(CacheProvider.HAZELCAST, true);
+                TransactionFactory.getOrCreateTransaction(CacheProvider.HAZELCAST, true);
                 break;
             }
             default: {
