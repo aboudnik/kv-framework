@@ -31,7 +31,8 @@ public class CreateDeleteTest {
     public void testCreateDeleteRollback() {
         Transaction tx = Transaction.instance();
         TestEntry te = new TestEntry("testCreateDeleteRollback");
-        te.save();
+        TestEntry saveResult = te.save();
+        Assert.assertNotNull(saveResult);
         te.delete();
         tx.rollback();
         Assert.assertNull(tx.getAndClose(TestEntry.class, "testCreateDeleteRollback"));

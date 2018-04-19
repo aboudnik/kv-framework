@@ -57,7 +57,8 @@ public class GetUpdateSaveDeleteComplexEntryTest {
 
         entry.setValue(NEW_VALUE);
         entry.getKey().setValue(NEW_VALUE);
-        entry.save();
+        ComplexTestEntry2 saveResult = entry.save();
+        Assert.assertNotNull(saveResult);
         entry.delete();
         tx.rollback();
         ComplexTestEntry2 notUpdatedEntry = tx.getAndClose(ComplexTestEntry2.class, key);

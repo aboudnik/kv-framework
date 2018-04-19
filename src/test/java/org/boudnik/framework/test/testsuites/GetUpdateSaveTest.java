@@ -44,7 +44,8 @@ public class GetUpdateSaveTest {
         Assert.assertNull(entry.getValue());
 
         entry.setValue(NEW_VALUE);
-        entry.save();
+        MutableTestEntry saveResult = entry.save();
+        Assert.assertNotNull(saveResult);
         tx.rollback();
         Assert.assertNull(tx.get(MutableTestEntry.class, "testGetUpdateSaveRollback").getValue());
     }

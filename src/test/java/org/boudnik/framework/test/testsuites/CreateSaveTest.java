@@ -26,7 +26,8 @@ public class CreateSaveTest {
     @Test
     public void testCreateSaveRollback() {
         Transaction tx = Transaction.instance();
-        new TestEntry("testCreateSaveRollback").save();
+        TestEntry saveResult = new TestEntry("testCreateSaveRollback").save();
+        Assert.assertNotNull(saveResult);
         tx.rollback();
         Assert.assertNull(tx.getAndClose(TestEntry.class, "testCreateSaveRollback"));
     }
