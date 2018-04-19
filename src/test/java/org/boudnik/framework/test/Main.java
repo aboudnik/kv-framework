@@ -5,6 +5,7 @@ import org.boudnik.framework.Transaction;
 import org.boudnik.framework.TransactionFactory;
 import org.boudnik.framework.ignite.IgniteTransaction;
 import org.boudnik.framework.test.core.TestEntry;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -34,14 +35,21 @@ public class Main {
         ExecutorService executor = Executors.newFixedThreadPool(2);
         for(int i = 0; i < 2; i++) {
             executor.submit(() -> {
-                Transaction tx = Transaction.instance();
-                tx.txCommit(() -> new TestEntry("http://localhost/1").save(""));
+                try {
+                    Transaction tx = TransactionFactory.<IgniteTransaction>getOrCreateTransaction(CacheProvider.IGNITE, true).withCache(TestEntry.class);
+                    tx.txCommit(() -> new TestEntry("http://localhost/1").save(""));
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
             });
         }
 
         try {
             executor.awaitTermination(2, TimeUnit.SECONDS);
-        } catch (InterruptedException ignored) {
+            Assert.assertNotNull(Transaction.instance().get(TestEntry.class, ""));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+
     }
 }
