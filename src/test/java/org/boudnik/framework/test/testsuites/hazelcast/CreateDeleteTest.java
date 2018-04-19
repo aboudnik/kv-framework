@@ -1,25 +1,27 @@
-package org.boudnik.framework.test.testsuites;
+package org.boudnik.framework.test.testsuites.hazelcast;
 
-import org.apache.ignite.Ignition;
-import org.apache.ignite.configuration.IgniteConfiguration;
+import com.hazelcast.core.Hazelcast;
 import org.boudnik.framework.Transaction;
-import org.boudnik.framework.TransactionFactory;
 import org.boudnik.framework.test.core.TestEntry;
+import org.boudnik.framework.TransactionFactory;
+import org.boudnik.framework.hazelcast.HazelcastTransaction;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class CreateDeleteTest {
 
+    private static TransactionFactory factory;
     @BeforeClass
     public static void beforeAll(){
-
-        TransactionFactory.getInstance().getOrCreateIgniteTransaction(() -> Ignition.getOrStart(new IgniteConfiguration()), true).withCache(TestEntry.class);
+        factory = TransactionFactory.getInstance();
+        TransactionFactory.getInstance().getOrCreateHazelcastTransaction(Hazelcast::newHazelcastInstance, true);
     }
 
     @Test
     public void testCreateDeleteCommit() {
-        Transaction tx = Transaction.instance().txCommit(() -> {
+        HazelcastTransaction tx = TransactionFactory.getInstance().getOrCreateHazelcastTransaction();
+        tx.txCommit(() -> {
             TestEntry te = new TestEntry("testCreateDeleteCommit");
             te.save();
             te.delete();
@@ -29,10 +31,9 @@ public class CreateDeleteTest {
 
     @Test
     public void testCreateDeleteRollback() {
-        Transaction tx = Transaction.instance();
+        HazelcastTransaction tx = TransactionFactory.getInstance().getOrCreateHazelcastTransaction();
         TestEntry te = new TestEntry("testCreateDeleteRollback");
-        TestEntry saveResult = te.save();
-        Assert.assertNotNull(saveResult);
+        te.save();
         te.delete();
         tx.rollback();
         Assert.assertNull(tx.getAndClose(TestEntry.class, "testCreateDeleteRollback"));
@@ -40,7 +41,7 @@ public class CreateDeleteTest {
 
     @Test(expected = RuntimeException.class)
     public void testCreateDeleteRollbackViaException() {
-        Transaction tx = Transaction.instance().txCommit(() -> {
+        HazelcastTransaction tx = TransactionFactory.getInstance().getOrCreateHazelcastTransaction().txCommit(() -> {
             TestEntry te = new TestEntry("testCreateDeleteRollback");
             te.save();
             te.delete();

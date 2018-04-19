@@ -1,9 +1,9 @@
-package org.boudnik.framework.test.testsuites;
+package org.boudnik.framework.test.testsuites.hazelcast;
 
-import org.apache.ignite.Ignition;
-import org.apache.ignite.configuration.IgniteConfiguration;
+import com.hazelcast.core.Hazelcast;
 import org.boudnik.framework.Transaction;
 import org.boudnik.framework.TransactionFactory;
+import org.boudnik.framework.hazelcast.HazelcastTransaction;
 import org.boudnik.framework.test.core.TestEntry;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -11,30 +11,32 @@ import org.junit.Test;
 
 public class CreateSaveTest {
 
+    private static TransactionFactory factory;
     @BeforeClass
     public static void beforeAll(){
-        TransactionFactory.getInstance().getOrCreateIgniteTransaction(() -> Ignition.getOrStart(new IgniteConfiguration()), true).withCache(TestEntry.class);
+        factory = TransactionFactory.getInstance();
+        TransactionFactory.getInstance().getOrCreateHazelcastTransaction(Hazelcast::newHazelcastInstance, true);
     }
 
     @Test
     public void testCreateSaveCommit() {
-        Transaction tx = Transaction.instance();
+        HazelcastTransaction tx = factory.getOrCreateHazelcastTransaction();
         tx.txCommit(new TestEntry("testCreateSaveCommit"));
+
         Assert.assertNotNull(tx.getAndClose(TestEntry.class, "testCreateSaveCommit"));
     }
 
     @Test
     public void testCreateSaveRollback() {
-        Transaction tx = Transaction.instance();
-        TestEntry saveResult = new TestEntry("testCreateSaveRollback").save();
-        Assert.assertNotNull(saveResult);
+        HazelcastTransaction tx = factory.getOrCreateHazelcastTransaction();
+        new TestEntry("testCreateSaveRollback").save();
         tx.rollback();
         Assert.assertNull(tx.getAndClose(TestEntry.class, "testCreateSaveRollback"));
     }
 
     @Test(expected = RuntimeException.class)
     public void testCreateSaveRollbackViaException() {
-        Transaction tx = Transaction.instance();
+        HazelcastTransaction tx = factory.getOrCreateHazelcastTransaction();
         tx.txCommit(() -> {
             new TestEntry("testCreateSaveRollback").save();
             throw new RuntimeException("Rollback Exception");

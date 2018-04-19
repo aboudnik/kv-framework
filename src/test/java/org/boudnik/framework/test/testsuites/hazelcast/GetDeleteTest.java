@@ -1,9 +1,8 @@
-package org.boudnik.framework.test.testsuites;
+package org.boudnik.framework.test.testsuites.hazelcast;
 
-import org.apache.ignite.Ignition;
-import org.apache.ignite.configuration.IgniteConfiguration;
-import org.boudnik.framework.Transaction;
+import com.hazelcast.core.Hazelcast;
 import org.boudnik.framework.TransactionFactory;
+import org.boudnik.framework.hazelcast.HazelcastTransaction;
 import org.boudnik.framework.test.core.MutableTestEntry;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -11,14 +10,16 @@ import org.junit.Test;
 
 public class GetDeleteTest {
 
+    private static TransactionFactory factory;
     @BeforeClass
     public static void beforeAll(){
-        TransactionFactory.getInstance().getOrCreateIgniteTransaction(() -> Ignition.getOrStart(new IgniteConfiguration()), true).withCache(MutableTestEntry.class);
+        factory = TransactionFactory.getInstance();
+        TransactionFactory.getInstance().getOrCreateHazelcastTransaction(Hazelcast::newHazelcastInstance, true);
     }
 
     @Test
     public void testGetDeleteCommit() {
-        Transaction tx = Transaction.instance();
+        HazelcastTransaction tx = factory.getOrCreateHazelcastTransaction();
         tx.txCommit(new MutableTestEntry("testGetDeleteCommit"));
 
         MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetDeleteCommit");
@@ -30,7 +31,7 @@ public class GetDeleteTest {
 
     @Test
     public void testGetDeleteRollback() {
-        Transaction tx = Transaction.instance();
+        HazelcastTransaction tx = factory.getOrCreateHazelcastTransaction();
         tx.txCommit(new MutableTestEntry("testGetDeleteRollback"));
 
         MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetDeleteRollback");
@@ -43,10 +44,12 @@ public class GetDeleteTest {
 
     @Test(expected = RuntimeException.class)
     public void testGetDeleteRollbackViaException() {
-        Transaction tx = Transaction.instance();
+        HazelcastTransaction tx = factory.getOrCreateHazelcastTransaction();
         tx.txCommit(new MutableTestEntry("testGetDeleteRollback"));
 
+
         MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetDeleteRollback");
+
         Assert.assertNotNull(entry);
         tx.txCommit(() -> {
             entry.delete();

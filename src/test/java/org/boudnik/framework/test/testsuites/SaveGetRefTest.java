@@ -1,6 +1,9 @@
 package org.boudnik.framework.test.testsuites;
 
+import org.apache.ignite.Ignition;
+import org.apache.ignite.configuration.IgniteConfiguration;
 import org.boudnik.framework.Transaction;
+import org.boudnik.framework.TransactionFactory;
 import org.boudnik.framework.test.core.RefTestEntry;
 import org.boudnik.framework.test.core.TestEntry;
 import org.junit.BeforeClass;
@@ -12,7 +15,7 @@ public class SaveGetRefTest {
 
     @BeforeClass
     public static void beforeAll() {
-        Transaction.instance().withCache(RefTestEntry.class, TestEntry.class);
+        TransactionFactory.getInstance().getOrCreateIgniteTransaction(() -> Ignition.getOrStart(new IgniteConfiguration()), true).withCache(RefTestEntry.class, TestEntry.class);
     }
 
     @Test
