@@ -1,9 +1,9 @@
 package org.boudnik.framework.test;
 
-import org.apache.ignite.Ignition;
-import org.apache.ignite.configuration.IgniteConfiguration;
+import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Transaction;
 import org.boudnik.framework.TransactionFactory;
+import org.boudnik.framework.ignite.IgniteTransaction;
 import org.boudnik.framework.test.core.TestEntry;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -20,7 +20,7 @@ public class Main {
 
     @BeforeClass
     public static void beforeAll(){
-        TransactionFactory.getInstance().getOrCreateIgniteTransaction(() -> Ignition.getOrStart(new IgniteConfiguration()), false).withCache(TestEntry.class);
+        TransactionFactory.<IgniteTransaction>getOrCreateTransaction(CacheProvider.IGNITE, true).withCache(TestEntry.class);
     }
 
     @Test

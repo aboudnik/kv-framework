@@ -1,6 +1,7 @@
 package org.boudnik.framework.test.testsuites.hazelcast;
 
-import com.hazelcast.core.Hazelcast;
+import org.boudnik.framework.CacheProvider;
+import org.boudnik.framework.Transaction;
 import org.boudnik.framework.TransactionFactory;
 import org.boudnik.framework.hazelcast.HazelcastTransaction;
 import org.boudnik.framework.test.core.MutableTestEntry;
@@ -11,16 +12,15 @@ import org.junit.Test;
 public class GetUpdateSaveTest {
 
     private static final String NEW_VALUE = "New Value";
-    private static TransactionFactory factory;
+
     @BeforeClass
     public static void beforeAll(){
-        factory = TransactionFactory.getInstance();
-        TransactionFactory.getInstance().getOrCreateHazelcastTransaction(Hazelcast::newHazelcastInstance, true);
+        TransactionFactory.<HazelcastTransaction>getOrCreateTransaction(CacheProvider.HAZELCAST, true);
     }
 
     @Test
     public void testGetUpdateSaveCommit() {
-        HazelcastTransaction tx = factory.getOrCreateHazelcastTransaction();
+        HazelcastTransaction tx = Transaction.instance();
         tx.txCommit(new MutableTestEntry("testGetUpdateSaveCommit"));
 
         final MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveCommit");
@@ -36,7 +36,7 @@ public class GetUpdateSaveTest {
 
     @Test
     public void testGetUpdateSaveRollback() {
-        HazelcastTransaction tx = factory.getOrCreateHazelcastTransaction();
+        HazelcastTransaction tx = Transaction.instance();
         tx.txCommit(new MutableTestEntry("testGetUpdateSaveRollback"));
 
         final MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveRollback");
@@ -51,7 +51,7 @@ public class GetUpdateSaveTest {
 
     @Test(expected = RuntimeException.class)
     public void testGetUpdateSaveRollbackViaException() {
-        HazelcastTransaction tx = factory.getOrCreateHazelcastTransaction();
+        HazelcastTransaction tx = Transaction.instance();
         tx.txCommit(new MutableTestEntry("testGetUpdateSaveRollback"));
 
         final MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveRollback");

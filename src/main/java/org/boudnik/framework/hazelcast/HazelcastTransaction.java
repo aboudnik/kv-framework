@@ -35,12 +35,12 @@ public class HazelcastTransaction extends Transaction {
     }
 
     @Override
-    protected void doRemove(Class<? extends org.boudnik.framework.OBJ> clazz, Map<Object, org.boudnik.framework.OBJ> map) {
+    protected void doRemove(Class<? extends OBJ> clazz, Map<Object, OBJ> map) {
         map.keySet().forEach(cache(clazz)::remove);
     }
 
     @Override
-    protected void doPut(Class<? extends org.boudnik.framework.OBJ> clazz, Map<Object, org.boudnik.framework.OBJ> map) {
+    protected void doPut(Class<? extends OBJ> clazz, Map<Object, OBJ> map) {
         Map<Object, Object> cache = cache(clazz);
         Map<Object, Object> map2Cache = new HashMap<>();
         for (Map.Entry<Object, OBJ> entry : map.entrySet()) {

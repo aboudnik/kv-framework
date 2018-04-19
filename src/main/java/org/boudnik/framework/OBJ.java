@@ -1,11 +1,8 @@
 package org.boudnik.framework;
 
-import org.apache.ignite.binary.BinaryObject;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
@@ -22,6 +19,7 @@ public interface OBJ<K> extends Serializable {
 //        throw new NoSuchElementException("setKey");
     }
 
+    @SuppressWarnings("unchecked")
     default <T> T save() {
         return (T) Transaction.instance().save(this);
     }
@@ -35,9 +33,9 @@ public interface OBJ<K> extends Serializable {
         Transaction.instance().delete(this);
     }
 
-  //  default void revert() {
-  //      Transaction.instance().revert(this);
-  //  }
+    //  default void revert() {
+    //      Transaction.instance().revert(this);
+    //  }
 
     default void onCommit(Object current, Object memento) {
 
@@ -79,9 +77,9 @@ public interface OBJ<K> extends Serializable {
         }
 
         @Override
-        public void onCommit(BinaryObject current, BinaryObject memento) {
-            for (String field : current.type().fieldNames()) {
-                Object c = current.field(field);
+        public void onCommit(BinaryObject instance, BinaryObject memento) {
+            for (String field : instance.type().fieldNames()) {
+                Object c = instance.field(field);
                 Object m = memento.field(field);
                 if (m == null) {
                     if (c != null)

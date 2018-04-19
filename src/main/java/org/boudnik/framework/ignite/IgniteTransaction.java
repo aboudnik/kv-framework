@@ -38,7 +38,7 @@ public class IgniteTransaction extends Transaction {
         return ignite.transactions().tx() != null;
     }
 
-    public IgniteTransaction withCache(Class... classes) {
+    public IgniteTransaction withCache(Class ... classes) {
         for (Class clazz : classes) {
             ignite.getOrCreateCache(clazz.getName());
         }

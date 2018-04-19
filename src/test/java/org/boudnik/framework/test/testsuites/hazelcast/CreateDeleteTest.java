@@ -1,26 +1,24 @@
 package org.boudnik.framework.test.testsuites.hazelcast;
 
-import com.hazelcast.core.Hazelcast;
+import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Transaction;
-import org.boudnik.framework.test.core.TestEntry;
 import org.boudnik.framework.TransactionFactory;
 import org.boudnik.framework.hazelcast.HazelcastTransaction;
+import org.boudnik.framework.test.core.TestEntry;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class CreateDeleteTest {
 
-    private static TransactionFactory factory;
     @BeforeClass
     public static void beforeAll(){
-        factory = TransactionFactory.getInstance();
-        TransactionFactory.getInstance().getOrCreateHazelcastTransaction(Hazelcast::newHazelcastInstance, true);
+        TransactionFactory.<HazelcastTransaction>getOrCreateTransaction(CacheProvider.HAZELCAST, true);
     }
 
     @Test
     public void testCreateDeleteCommit() {
-        HazelcastTransaction tx = TransactionFactory.getInstance().getOrCreateHazelcastTransaction();
+        Transaction tx = Transaction.instance();
         tx.txCommit(() -> {
             TestEntry te = new TestEntry("testCreateDeleteCommit");
             te.save();
@@ -31,7 +29,7 @@ public class CreateDeleteTest {
 
     @Test
     public void testCreateDeleteRollback() {
-        HazelcastTransaction tx = TransactionFactory.getInstance().getOrCreateHazelcastTransaction();
+        Transaction tx = Transaction.instance();
         TestEntry te = new TestEntry("testCreateDeleteRollback");
         te.save();
         te.delete();
@@ -41,7 +39,7 @@ public class CreateDeleteTest {
 
     @Test(expected = RuntimeException.class)
     public void testCreateDeleteRollbackViaException() {
-        HazelcastTransaction tx = TransactionFactory.getInstance().getOrCreateHazelcastTransaction().txCommit(() -> {
+        Transaction tx = Transaction.instance().txCommit(() -> {
             TestEntry te = new TestEntry("testCreateDeleteRollback");
             te.save();
             te.delete();

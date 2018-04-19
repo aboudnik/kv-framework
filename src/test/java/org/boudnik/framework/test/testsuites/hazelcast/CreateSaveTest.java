@@ -1,6 +1,6 @@
 package org.boudnik.framework.test.testsuites.hazelcast;
 
-import com.hazelcast.core.Hazelcast;
+import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Transaction;
 import org.boudnik.framework.TransactionFactory;
 import org.boudnik.framework.hazelcast.HazelcastTransaction;
@@ -11,16 +11,14 @@ import org.junit.Test;
 
 public class CreateSaveTest {
 
-    private static TransactionFactory factory;
     @BeforeClass
     public static void beforeAll(){
-        factory = TransactionFactory.getInstance();
-        TransactionFactory.getInstance().getOrCreateHazelcastTransaction(Hazelcast::newHazelcastInstance, true);
+        TransactionFactory.<HazelcastTransaction>getOrCreateTransaction(CacheProvider.HAZELCAST, true);
     }
 
     @Test
     public void testCreateSaveCommit() {
-        HazelcastTransaction tx = factory.getOrCreateHazelcastTransaction();
+        Transaction tx = Transaction.instance();
         tx.txCommit(new TestEntry("testCreateSaveCommit"));
 
         Assert.assertNotNull(tx.getAndClose(TestEntry.class, "testCreateSaveCommit"));
@@ -28,7 +26,7 @@ public class CreateSaveTest {
 
     @Test
     public void testCreateSaveRollback() {
-        HazelcastTransaction tx = factory.getOrCreateHazelcastTransaction();
+        Transaction tx = Transaction.instance();
         new TestEntry("testCreateSaveRollback").save();
         tx.rollback();
         Assert.assertNull(tx.getAndClose(TestEntry.class, "testCreateSaveRollback"));
@@ -36,7 +34,7 @@ public class CreateSaveTest {
 
     @Test(expected = RuntimeException.class)
     public void testCreateSaveRollbackViaException() {
-        HazelcastTransaction tx = factory.getOrCreateHazelcastTransaction();
+        Transaction tx = Transaction.instance();
         tx.txCommit(() -> {
             new TestEntry("testCreateSaveRollback").save();
             throw new RuntimeException("Rollback Exception");
