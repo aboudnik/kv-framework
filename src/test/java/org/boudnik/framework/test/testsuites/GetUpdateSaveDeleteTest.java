@@ -43,7 +43,8 @@ public class GetUpdateSaveDeleteTest {
         Assert.assertNull(entry.getValue());
 
         entry.setValue(NEW_VALUE);
-        entry.save();
+        MutableTestEntry  saveResult = entry.save();
+        Assert.assertNotNull(saveResult);
         entry.delete();
         tx.rollback();
         entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteRollback");
