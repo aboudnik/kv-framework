@@ -25,7 +25,7 @@ public class CreateSaveRefTest {
         Transaction tx = Transaction.instance();
         tx.txCommit(() -> {
             TestEntry entry = new TestEntry("test").save();
-            ref = new RefTestEntry(1, entry).save();
+            ref = new RefTestEntry("test", entry).save();
             assertSame(tx.get(TestEntry.class, "test"), entry);
             assertSame(ref.getEntry(), entry);
         });
