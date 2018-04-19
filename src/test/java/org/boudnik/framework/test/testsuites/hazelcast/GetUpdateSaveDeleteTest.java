@@ -1,6 +1,7 @@
 package org.boudnik.framework.test.testsuites.hazelcast;
 
-import com.hazelcast.core.Hazelcast;
+import org.boudnik.framework.CacheProvider;
+import org.boudnik.framework.Transaction;
 import org.boudnik.framework.TransactionFactory;
 import org.boudnik.framework.hazelcast.HazelcastTransaction;
 import org.boudnik.framework.test.core.MutableTestEntry;
@@ -11,16 +12,15 @@ import org.junit.Test;
 public class GetUpdateSaveDeleteTest {
 
     private static final String NEW_VALUE = "New Value";
-    private static TransactionFactory factory;
+
     @BeforeClass
     public static void beforeAll(){
-        factory = TransactionFactory.getInstance();
-        TransactionFactory.getInstance().getOrCreateHazelcastTransaction(Hazelcast::newHazelcastInstance, true);
+        TransactionFactory.<HazelcastTransaction>getOrCreateTransaction(CacheProvider.HAZELCAST, true);
     }
 
     @Test
     public void testGetUpdateSaveDeleteCommit() {
-        HazelcastTransaction tx = factory.getOrCreateHazelcastTransaction();
+        HazelcastTransaction tx = Transaction.instance();
         tx.txCommit(new MutableTestEntry("testGetUpdateSaveDeleteCommit"));
 
         final MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteCommit");
@@ -38,7 +38,7 @@ public class GetUpdateSaveDeleteTest {
     @Test
     public void testGetUpdateSaveDeleteRollback() {
 
-        HazelcastTransaction tx = factory.getOrCreateHazelcastTransaction();
+        HazelcastTransaction tx = Transaction.instance();
         tx.txCommit(new MutableTestEntry("testGetUpdateSaveDeleteRollback"));
 
         MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteRollback");
@@ -57,7 +57,7 @@ public class GetUpdateSaveDeleteTest {
     @Test(expected = RuntimeException.class)
     public void testGetUpdateSaveDeleteRollbackViaException() {
 
-        HazelcastTransaction tx = factory.getOrCreateHazelcastTransaction();
+        HazelcastTransaction tx = Transaction.instance();
         tx.txCommit(new MutableTestEntry("testGetUpdateSaveDeleteRollback"));
 
         final MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteRollback");

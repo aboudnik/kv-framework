@@ -2,6 +2,7 @@ package org.boudnik.framework;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -76,12 +77,14 @@ public abstract class Transaction implements AutoCloseable {
 
     @NotNull
     private Map<Boolean, Map<Object, OBJ>> getTombstoneNotTombstoneMap(Map.Entry<Class<? extends OBJ>, Map<Object, OBJ>> byClass) {
-        Map<Boolean, Map<Object, OBJ>> tombstoneNotTombstoneMap = new HashMap<>();
+        Map<Object, OBJ> map;
+        if((map = byClass.getValue()).isEmpty()) return Collections.emptyMap();
+        Map<Boolean, Map<Object, OBJ>> tombstoneNotTombstoneMap = new HashMap<>(2);
 
-        for(Map.Entry<Object, OBJ> entry: byClass.getValue().entrySet()){
-            boolean key = entry.getValue() == OBJ.TOMBSTONE;
-            tombstoneNotTombstoneMap.computeIfAbsent(key, k -> new HashMap<>());
-            tombstoneNotTombstoneMap.get(key).put(entry.getKey(), entry.getValue());
+        for(Map.Entry<Object, OBJ> entry: map.entrySet()){
+            tombstoneNotTombstoneMap
+                    .computeIfAbsent(entry.getValue() == OBJ.TOMBSTONE, k -> new HashMap<>())
+                    .put(entry.getKey(), entry.getValue());
         }
         return tombstoneNotTombstoneMap;
     }
@@ -107,8 +110,8 @@ public abstract class Transaction implements AutoCloseable {
         return OBJ.TOMBSTONE == reference;
     }
 
-    public static Transaction instance(){
-        return TransactionFactory.getTransaction();
+    public static <T extends Transaction> T instance(){
+        return TransactionFactory.getCurrentTransaction();
     }
 
     @Override

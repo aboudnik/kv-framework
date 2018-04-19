@@ -1,6 +1,7 @@
 package org.boudnik.framework.test.testsuites.hazelcast;
 
-import com.hazelcast.core.Hazelcast;
+import org.boudnik.framework.CacheProvider;
+import org.boudnik.framework.Transaction;
 import org.boudnik.framework.TransactionFactory;
 import org.boudnik.framework.hazelcast.HazelcastTransaction;
 import org.boudnik.framework.test.core.MutableTestEntry;
@@ -10,16 +11,14 @@ import org.junit.Test;
 
 public class GetDeleteTest {
 
-    private static TransactionFactory factory;
     @BeforeClass
     public static void beforeAll(){
-        factory = TransactionFactory.getInstance();
-        TransactionFactory.getInstance().getOrCreateHazelcastTransaction(Hazelcast::newHazelcastInstance, true);
+        TransactionFactory.<HazelcastTransaction>getOrCreateTransaction(CacheProvider.HAZELCAST, true);
     }
 
     @Test
     public void testGetDeleteCommit() {
-        HazelcastTransaction tx = factory.getOrCreateHazelcastTransaction();
+        Transaction tx = Transaction.instance();
         tx.txCommit(new MutableTestEntry("testGetDeleteCommit"));
 
         MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetDeleteCommit");
@@ -31,7 +30,7 @@ public class GetDeleteTest {
 
     @Test
     public void testGetDeleteRollback() {
-        HazelcastTransaction tx = factory.getOrCreateHazelcastTransaction();
+        Transaction tx = Transaction.instance();
         tx.txCommit(new MutableTestEntry("testGetDeleteRollback"));
 
         MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetDeleteRollback");
@@ -44,7 +43,7 @@ public class GetDeleteTest {
 
     @Test(expected = RuntimeException.class)
     public void testGetDeleteRollbackViaException() {
-        HazelcastTransaction tx = factory.getOrCreateHazelcastTransaction();
+        Transaction tx = Transaction.instance();
         tx.txCommit(new MutableTestEntry("testGetDeleteRollback"));
 
 
