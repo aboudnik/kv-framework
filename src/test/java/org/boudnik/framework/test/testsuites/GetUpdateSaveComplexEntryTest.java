@@ -2,22 +2,18 @@ package org.boudnik.framework.test.testsuites;
 
 import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Transaction;
-import org.boudnik.framework.TransactionFactory;
-import org.boudnik.framework.ignite.IgniteTransaction;
 import org.boudnik.framework.test.core.ComplexTestEntry;
 import org.boudnik.framework.test.core.ComplexTestEntry2;
 import org.boudnik.framework.test.core.TestEntry;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class GetUpdateSaveComplexEntryTest {
+public class GetUpdateSaveComplexEntryTest extends TransactionTest {
 
     private static final String NEW_VALUE = "New Value";
 
-    @BeforeClass
-    public static void beforeAll(){
-        TransactionFactory.<IgniteTransaction>getOrCreateTransaction(CacheProvider.IGNITE, true).withCache(ComplexTestEntry2.class);
+    public GetUpdateSaveComplexEntryTest(CacheProvider input) {
+        super(input, ComplexTestEntry2.class);
     }
 
     @Test
@@ -52,7 +48,7 @@ public class GetUpdateSaveComplexEntryTest {
 
         entry.setValue(NEW_VALUE);
         entry.getKey().setValue(NEW_VALUE);
-        ComplexTestEntry2  saveResult = entry.save();
+        ComplexTestEntry2 saveResult = entry.save();
         Assert.assertNotNull(saveResult);
         tx.rollback();
         ComplexTestEntry2 notUpdatedEntry = tx.getAndClose(ComplexTestEntry2.class, key);

@@ -2,33 +2,32 @@ package org.boudnik.framework.test.testsuites;
 
 import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Transaction;
-import org.boudnik.framework.TransactionFactory;
-import org.boudnik.framework.ignite.IgniteTransaction;
 import org.boudnik.framework.test.core.ComplexTestEntry;
 import org.boudnik.framework.test.core.ComplexTestEntry2;
 import org.boudnik.framework.test.core.TestEntry;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
-public class GetDeleteComplexEntryTest {
+@RunWith(Parameterized.class)
+public class GetDeleteComplexEntryTest extends TransactionTest {
 
-    @BeforeClass
-    public static void beforeAll(){
-        TransactionFactory.<IgniteTransaction>getOrCreateTransaction(CacheProvider.IGNITE, true).withCache(ComplexTestEntry2.class, ComplexTestEntry.class, TestEntry.class);
+    public GetDeleteComplexEntryTest(CacheProvider input) {
+        super(input, ComplexTestEntry2.class);
     }
 
     @Test
     public void testGetDeleteCommitComplexTestEntry2() {
         Transaction tx = Transaction.instance();
-        ComplexTestEntry2 te = new ComplexTestEntry2(new ComplexTestEntry(new TestEntry("testCommitDeleteCommit")));
+        ComplexTestEntry2 te = new ComplexTestEntry2(new ComplexTestEntry(new TestEntry("testGetDeleteCommitComplex")));
         tx.txCommit(te);
 
         ComplexTestEntry key = te.getKey();
         ComplexTestEntry2 entry = tx.get(ComplexTestEntry2.class, key);
         Assert.assertNotNull(entry);
         tx.txCommit(entry::delete);
-      //  Assert.assertNull(tx.getAndClose(ComplexTestEntry2.class, key));
+        Assert.assertNull(tx.getAndClose(ComplexTestEntry2.class, key));
     }
 
     @Test
@@ -58,7 +57,7 @@ public class GetDeleteComplexEntryTest {
 
         tx.txCommit(() -> {
             entry.delete();
-            throw  new RuntimeException("RollbackException");
+            throw new RuntimeException("RollbackException");
         });
         Assert.assertNotNull(tx.getAndClose(ComplexTestEntry2.class, key));
     }
