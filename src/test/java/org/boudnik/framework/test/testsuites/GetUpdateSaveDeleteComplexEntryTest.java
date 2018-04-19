@@ -1,11 +1,7 @@
 package org.boudnik.framework.test.testsuites;
 
-import com.hazelcast.core.Hazelcast;
-import org.apache.ignite.Ignition;
-import org.apache.ignite.configuration.IgniteConfiguration;
 import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Transaction;
-import org.boudnik.framework.TransactionFactory;
 import org.boudnik.framework.test.core.ComplexTestEntry;
 import org.boudnik.framework.test.core.ComplexTestEntry2;
 import org.boudnik.framework.test.core.TestEntry;
@@ -14,11 +10,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.util.Arrays;
-import java.util.Collection;
-
 @RunWith(Parameterized.class)
-public class GetUpdateSaveDeleteComplexEntryTest extends TransactionTest{
+public class GetUpdateSaveDeleteComplexEntryTest extends TransactionTest {
 
     private static final String NEW_VALUE = "New Value";
 
