@@ -103,7 +103,7 @@ public interface OBJ<K> extends Serializable {
         return ((BinaryObject) o).field("identity");
     }*/
 
-    class REF<I, V extends OBJ<I>> {
+    class REF<I, V extends OBJ<I>> implements Serializable{
         private final Class<V> clazz;
         private transient V reference;
 

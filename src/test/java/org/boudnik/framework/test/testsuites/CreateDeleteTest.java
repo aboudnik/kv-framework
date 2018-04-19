@@ -2,23 +2,20 @@ package org.boudnik.framework.test.testsuites;
 
 import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Transaction;
-import org.boudnik.framework.TransactionFactory;
-import org.boudnik.framework.ignite.IgniteTransaction;
 import org.boudnik.framework.test.core.TestEntry;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class CreateDeleteTest {
+public class CreateDeleteTest extends TransactionTest {
 
-    @BeforeClass
-    public static void beforeAll(){
-        TransactionFactory.<IgniteTransaction>getOrCreateTransaction(CacheProvider.IGNITE, true).withCache(TestEntry.class);
+    public CreateDeleteTest(CacheProvider input) {
+        super(input, TestEntry.class);
     }
 
     @Test
     public void testCreateDeleteCommit() {
-        Transaction tx = Transaction.instance().txCommit(() -> {
+        Transaction tx = Transaction.instance();
+        tx.txCommit(() -> {
             TestEntry te = new TestEntry("testCreateDeleteCommit");
             te.save();
             te.delete();
@@ -39,7 +36,8 @@ public class CreateDeleteTest {
 
     @Test(expected = RuntimeException.class)
     public void testCreateDeleteRollbackViaException() {
-        Transaction tx = Transaction.instance().txCommit(() -> {
+        Transaction tx = Transaction.instance();
+        tx.txCommit(() -> {
             TestEntry te = new TestEntry("testCreateDeleteRollback");
             te.save();
             te.delete();

@@ -2,26 +2,20 @@ package org.boudnik.framework.test.testsuites;
 
 import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Transaction;
-import org.boudnik.framework.TransactionFactory;
-import org.boudnik.framework.ignite.IgniteTransaction;
 import org.boudnik.framework.test.core.ComplexRefTestEntry;
 import org.boudnik.framework.test.core.RefTestEntry;
 import org.boudnik.framework.test.core.TestEntry;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.*;
 
-public class SaveDeleteComplexRefTest {
+public class SaveDeleteComplexRefTest extends TransactionTest {
 
     private RefTestEntry ref;
     private ComplexRefTestEntry complexRef;
 
-    @BeforeClass
-    public static void beforeAll() {
-        TransactionFactory.<IgniteTransaction>getOrCreateTransaction(CacheProvider.IGNITE, true).withCache(ComplexRefTestEntry.class, RefTestEntry.class, TestEntry.class);
+    public SaveDeleteComplexRefTest(CacheProvider input) {
+        super(input, ComplexRefTestEntry.class, RefTestEntry.class, TestEntry.class);
     }
 
     @Test
