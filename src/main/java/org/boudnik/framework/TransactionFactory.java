@@ -8,14 +8,6 @@ public class TransactionFactory {
     private TransactionFactory() {
     }
 
-    private static class TransactionFactoryHolder {
-        private static final TransactionFactory INSTANCE = new TransactionFactory();
-    }
-
-    public static TransactionFactory getInstance() {
-        return TransactionFactoryHolder.INSTANCE;
-    }
-
     @SuppressWarnings("unchecked")
     static <T extends Transaction> T getCurrentTransaction(){
         return (T) TRANSACTION_THREAD_LOCAL.get();
