@@ -1,5 +1,7 @@
 package org.boudnik.framework.test;
 
+import org.apache.ignite.Ignition;
+import org.apache.ignite.configuration.IgniteConfiguration;
 import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Transaction;
 import org.boudnik.framework.TransactionFactory;
@@ -20,8 +22,8 @@ import java.util.concurrent.TimeUnit;
 public class Main {
 
     @BeforeClass
-    public static void beforeAll(){
-        TransactionFactory.<IgniteTransaction>getOrCreateTransaction(CacheProvider.IGNITE, true).withCache(TestEntry.class);
+    public static void beforeAll() {
+        TransactionFactory.getOrCreateTransaction(CacheProvider.IGNITE, () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true).withCache(TestEntry.class);
     }
 
     @Test
@@ -33,12 +35,12 @@ public class Main {
     @Test
     public void mt() {
         ExecutorService executor = Executors.newFixedThreadPool(2);
-        for(int i = 0; i < 2; i++) {
+        for (int i = 0; i < 2; i++) {
             executor.submit(() -> {
                 try {
-                    Transaction tx = TransactionFactory.<IgniteTransaction>getOrCreateTransaction(CacheProvider.IGNITE, true).withCache(TestEntry.class);
+                    Transaction tx = TransactionFactory.getOrCreateTransaction(CacheProvider.IGNITE, () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true).withCache(TestEntry.class);
                     tx.txCommit(() -> new TestEntry("http://localhost/1").save(""));
-                }catch(Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             });
