@@ -9,7 +9,7 @@ public class TransactionFactory {
     }
 
     @SuppressWarnings("unchecked")
-    static <T extends Transaction> T getCurrentTransaction(){
+    static <T extends Transaction> T getCurrentTransaction() {
         return (T) TRANSACTION_THREAD_LOCAL.get();
     }
 
@@ -34,7 +34,7 @@ public class TransactionFactory {
             }
         }
 
-        transaction = supplier == null? cacheProvider.getDefaultSupplier().get(): supplier.get();
+        transaction = supplier == null ? cacheProvider.getDefaultSupplier().get() : supplier.get();
         TRANSACTION_THREAD_LOCAL.set(transaction);
         return (T) transaction;
     }

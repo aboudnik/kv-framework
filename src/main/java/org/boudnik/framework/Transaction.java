@@ -15,11 +15,15 @@ public abstract class Transaction implements AutoCloseable {
     private final Map<Class<? extends OBJ>, Map<Object, OBJ>> scope = new HashMap<>();
 
     public abstract <K, V extends OBJ> V get(Class<V> clazz, K identity);
+
     protected abstract void doPut(Class<? extends OBJ> clazz, Map<Object, OBJ> map);
+
     protected abstract void startTransactionIfNotStarted();
+
     protected abstract boolean isTransactionExist();
 
     protected abstract void engineSpecificCommitAction();
+
     protected abstract void engineSpecificRollbackAction();
 
     protected abstract <T extends Cache> T cache(Class<? extends OBJ> clazz);
@@ -29,6 +33,8 @@ public abstract class Transaction implements AutoCloseable {
     }
 
     public OBJ save(OBJ obj, Object key) {
+        if(key == null)
+            throw new NullPointerException();
         getMap(obj.getClass()).put(key, obj);
         return obj;
     }
@@ -112,10 +118,10 @@ public abstract class Transaction implements AutoCloseable {
     @NotNull
     private Map<Boolean, Map<Object, OBJ>> getTombstoneNotTombstoneMap(Map.Entry<Class<? extends OBJ>, Map<Object, OBJ>> byClass) {
         Map<Object, OBJ> map;
-        if((map = byClass.getValue()).isEmpty()) return Collections.emptyMap();
+        if ((map = byClass.getValue()).isEmpty()) return Collections.emptyMap();
         Map<Boolean, Map<Object, OBJ>> tombstoneNotTombstoneMap = new HashMap<>(2);
 
-        for(Map.Entry<Object, OBJ> entry: map.entrySet()){
+        for (Map.Entry<Object, OBJ> entry : map.entrySet()) {
             tombstoneNotTombstoneMap
                     .computeIfAbsent(entry.getValue() == OBJ.TOMBSTONE, k -> new HashMap<>())
                     .put(entry.getKey(), entry.getValue());
@@ -144,7 +150,7 @@ public abstract class Transaction implements AutoCloseable {
         return OBJ.TOMBSTONE == reference;
     }
 
-    public static <T extends Transaction> T instance(){
+    public static <T extends Transaction> T instance() {
         return TransactionFactory.getCurrentTransaction();
     }
 
@@ -164,7 +170,7 @@ public abstract class Transaction implements AutoCloseable {
         for (Map.Entry<Class<? extends OBJ>, Map<Object, OBJ>> byClass : scope.entrySet()) {
 
             Map<Boolean, Map<Object, OBJ>> tombstoneNotTombstoneMap = getTombstoneNotTombstoneMap(byClass);
-            for(Map.Entry<Boolean, Map<Object, OBJ>> tombstoneTypePartitionEntry: tombstoneNotTombstoneMap.entrySet()){
+            for (Map.Entry<Boolean, Map<Object, OBJ>> tombstoneTypePartitionEntry : tombstoneNotTombstoneMap.entrySet()) {
                 worker.accept(byClass.getKey(), tombstoneTypePartitionEntry.getValue(), tombstoneTypePartitionEntry.getKey());
             }
         }
