@@ -6,6 +6,7 @@ import org.apache.ignite.binary.BinaryObject;
 import org.boudnik.framework.OBJ;
 import org.boudnik.framework.Transaction;
 
+import javax.cache.Cache;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -67,30 +68,6 @@ public class IgniteTransaction extends Transaction {
         cache.putAll(map2Cache);
     }
 
-    protected void doRemove(Class<? extends OBJ> clazz, Map<Object, OBJ> map) {
-        cache(clazz).removeAll(map.keySet());
-    }
-
-    protected void doRollback(@SuppressWarnings("unused") Class<? extends OBJ> clazz, @SuppressWarnings("unused") Map<Object, OBJ> map, @SuppressWarnings("unused") boolean isTombstone) {
-/*
-        for (@SuppressWarnings("unused") Map.Entry<OBJ, BinaryObject> memento : mementos.entrySet()) {
-            BinaryObject binary = memento.getValue();
-            try {
-                Map<String, PropertyDescriptor> pds = new HashMap<>();
-                for (PropertyDescriptor pd : Introspector.getBeanInfo(clazz).getPropertyDescriptors())
-                    pds.put(pd.getName(), pd);
-                for (String field : binary.type().fieldNames()) {
-                    pds.get(field).setValue(field, binary.field(field));
-                }
-                for (PropertyDescriptor pd : Introspector.getBeanInfo(clazz).getPropertyDescriptors())
-                    pd.setValue(pd.getName(), binary.field(pd.getName()));
-            } catch (IntrospectionException e) {
-                e.printStackTrace();
-            }
-        }
-*/
-    }
-
     @SuppressWarnings("unchecked")
     public <K, V extends OBJ> V get(Class<V> clazz, K identity) {
         Map<Object, OBJ> map = getMap(clazz);
@@ -99,7 +76,7 @@ public class IgniteTransaction extends Transaction {
             if (map.containsKey(identity))
                 return null;
             else {
-                BinaryObject binaryObject = cache(clazz).<K, BinaryObject>withKeepBinary().get(identity);
+                BinaryObject binaryObject = igniteCache(clazz).<K, BinaryObject>withKeepBinary().get(identity);
                 if (binaryObject == null)
                     return null;
                 V v = binaryObject.deserialize();
@@ -112,14 +89,14 @@ public class IgniteTransaction extends Transaction {
             return obj;
     }
 
-    protected void revert(OBJ obj) {
-//        unSave(obj);
-        //todo
-        cache(obj.getClass()).remove(obj.getKey());
+    private IgniteCache<Object, BinaryObject> igniteCache(Class<? extends OBJ> clazz) {
+        return ignite.cache(clazz.getName());
     }
 
-    private IgniteCache<Object, BinaryObject> cache(Class<? extends OBJ> clazz) {
-        return ignite.cache(clazz.getName());
+    @Override
+    @SuppressWarnings("unchecked")
+    protected <T extends Cache> T cache(Class<? extends OBJ> clazz) {
+        return (T) igniteCache(clazz);
     }
 
     public IgniteTransaction tx() {

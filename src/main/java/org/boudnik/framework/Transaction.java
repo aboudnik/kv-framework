@@ -2,6 +2,7 @@ package org.boudnik.framework;
 
 import org.jetbrains.annotations.NotNull;
 
+import javax.cache.Cache;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +15,6 @@ public abstract class Transaction implements AutoCloseable {
     private final Map<Class<? extends OBJ>, Map<Object, OBJ>> scope = new HashMap<>();
 
     public abstract <K, V extends OBJ> V get(Class<V> clazz, K identity);
-    protected abstract void doRemove(Class<? extends OBJ> clazz, Map<Object, OBJ> map);
     protected abstract void doPut(Class<? extends OBJ> clazz, Map<Object, OBJ> map);
     protected abstract void startTransactionIfNotStarted();
     protected abstract boolean isTransactionExist();
