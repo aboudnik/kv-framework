@@ -15,7 +15,7 @@ import java.util.Collection;
  */
 public class IgniteClusterTest {
 
-	@Test(timeout = 5000)
+	@Test(timeout = 30000)
 	public void checkNumberOfNodesTest() {
 		Ignition.setClientMode(true);
 		try (final Ignite ignite = Ignition.start()) {
