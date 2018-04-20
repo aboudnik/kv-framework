@@ -17,5 +17,5 @@ before_script:
 before_script:
   - docker-compose -f ./docker/docker-compose.yml down
 
-#script:
-#  - docker-compose -f ./docker/docker-compose.yml logs
+script:
+  - mvn surefire:test -Dtest=IgniteClusterTest
