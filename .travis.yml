@@ -11,10 +11,10 @@ sudo: required
 services:
   - docker
 
-before_install:
+before_script:
   - docker-compose -f ./docker/docker-compose.yml up -d
 
-before_script:
+after_script:
   - docker-compose -f ./docker/docker-compose.yml down
 
 script:
