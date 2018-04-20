@@ -23,7 +23,7 @@ public class IgniteTransaction extends Transaction {
         this.ignite = ignite;
     }
 
-    protected void engineSpecificCommitAction(){
+    protected void engineSpecificCommitAction() {
         ignite.transactions().tx().commit();
     }
 
@@ -39,7 +39,7 @@ public class IgniteTransaction extends Transaction {
         return ignite.transactions().tx() != null;
     }
 
-    public IgniteTransaction withCache(Class ... classes) {
+    public IgniteTransaction withCache(Class... classes) {
         for (Class clazz : classes) {
             ignite.getOrCreateCache(clazz.getName());
         }
@@ -104,8 +104,8 @@ public class IgniteTransaction extends Transaction {
         return this;
     }
 
-    protected void startTransactionIfNotStarted(){
-        if(!isTransactionExist())
+    protected void startTransactionIfNotStarted() {
+        if (!isTransactionExist())
             ignite.transactions().txStart();
     }
 }

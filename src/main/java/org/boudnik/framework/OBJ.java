@@ -45,7 +45,8 @@ public interface OBJ<K> extends Serializable {
 
     }
 
-    OBJ<Object> TOMBSTONE = new OBJ<Object>(){} ;
+    OBJ<Object> TOMBSTONE = new OBJ<Object>() {
+    };
 
     abstract class Implementation<K> implements OBJ<K> {
 
@@ -103,7 +104,7 @@ public interface OBJ<K> extends Serializable {
         return ((BinaryObject) o).field("identity");
     }*/
 
-    class REF<I, V extends OBJ<I>> implements Serializable{
+    class REF<I, V extends OBJ<I>> implements Serializable {
         private final Class<V> clazz;
         private transient V reference;
 

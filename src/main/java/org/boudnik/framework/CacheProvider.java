@@ -15,7 +15,7 @@ public enum CacheProvider {
     private final Class<? extends Transaction> transactionClass;
     private final Supplier<? extends Transaction> defaultSupplier;
 
-    <T extends Transaction> CacheProvider(Class<T> transactionClass, Supplier<T> supplier){
+    <T extends Transaction> CacheProvider(Class<T> transactionClass, Supplier<T> supplier) {
         this.defaultSupplier = supplier;
         this.transactionClass = transactionClass;
     }

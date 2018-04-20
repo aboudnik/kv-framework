@@ -81,7 +81,7 @@ public class HazelcastTransaction extends Transaction {
                 Object binaryObject = cache(clazz).get(identity);
                 if (binaryObject == null)
                     return null;
-                V v = (V)binaryObject;
+                V v = (V) binaryObject;
                 v.setKey(identity);
                 map.put(identity, v);
                 mementos.put(v, binaryObject);
@@ -117,8 +117,7 @@ public class HazelcastTransaction extends Transaction {
 
     @Override
     protected void startTransactionIfNotStarted() {
-        if(!isTransactionExist())
-        {
+        if (!isTransactionExist()) {
             hazelcastTransactionContext = hc.newTransactionContext();
             hazelcastTransactionContext.beginTransaction();
         }
