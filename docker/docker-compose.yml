@@ -3,11 +3,14 @@ services:
   node1:
     image: "apacheignite/ignite:2.4.0"
     ports:
-      - "47500-47600:47500-47600" #TcpDiscoverySpi
-      - "47100-47200:47100-47200" #TcpCommunicationSpi
+      - "47500:47500" #TcpDiscoverySpi
+      - "47100:47100" #TcpCommunicationSpi
 #      - "11211:11211" #TCP server port for connect by internal http protocol.
 #      - "31100-31200:31100-31200" #time server port If you use time synchronization between nodes.
 #      - "48100-48200:48100-48200" #sharedMemoryPort if using shared memory.
 
   node2:
     image: "apacheignite/ignite:2.4.0"
+    ports:
+      - "47501:47501" #TcpDiscoverySpi
+      - "47101:47101" #TcpCommunicationSpi

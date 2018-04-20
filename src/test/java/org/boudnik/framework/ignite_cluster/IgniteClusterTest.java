@@ -15,14 +15,14 @@ import java.util.Collection;
  */
 public class IgniteClusterTest {
 
-	@Test
+	@Test(timeout = 5000)
 	public void checkNumberOfNodesTest() {
 		Ignition.setClientMode(true);
 		try (final Ignite ignite = Ignition.start()) {
 			final IgniteCluster cluster = ignite.cluster();
 			final Collection<ClusterNode> nodes = cluster.nodes();
 			final long actualNodesNumber = nodes.stream().filter(node -> !node.isClient()).count();
-			Assert.assertEquals(2L,actualNodesNumber);
+			Assert.assertEquals(2L, actualNodesNumber);
 		}
 	}
 }
