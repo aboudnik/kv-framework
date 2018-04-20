@@ -1,10 +1,15 @@
 package org.boudnik.framework.hazelcast;
 
+import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
+import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.transaction.TransactionContext;
 import org.boudnik.framework.OBJ;
 import org.boudnik.framework.Transaction;
 
+import javax.cache.Cache;
+import javax.cache.CacheManager;
+import javax.cache.spi.CachingProvider;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,10 +17,18 @@ public class HazelcastTransaction extends Transaction {
 
     private TransactionContext hazelcastTransactionContext;
     private final Map<OBJ, Object> mementos = new HashMap<>();
+    private final CachingProvider cachingProvider;
+    private final CacheConfig config;
     private final HazelcastInstance hc;
 
     public HazelcastTransaction(HazelcastInstance hc) {
+        this(hc, new CacheConfig());
+    }
+
+    public HazelcastTransaction(HazelcastInstance hc, CacheConfig config) {
         this.hc = hc;
+        cachingProvider = HazelcastServerCachingProvider.createCachingProvider(hc);
+        this.config = config;
     }
 
     @Override
@@ -35,13 +48,8 @@ public class HazelcastTransaction extends Transaction {
     }
 
     @Override
-    protected void doRemove(Class<? extends OBJ> clazz, Map<Object, OBJ> map) {
-        map.keySet().forEach(cache(clazz)::remove);
-    }
-
-    @Override
     protected void doPut(Class<? extends OBJ> clazz, Map<Object, OBJ> map) {
-        Map<Object, Object> cache = cache(clazz);
+        Cache<Object, Object> cache = cache(clazz);
         Map<Object, Object> map2Cache = new HashMap<>();
         for (Map.Entry<Object, OBJ> entry : map.entrySet()) {
             OBJ obj = entry.getValue();
@@ -83,14 +91,16 @@ public class HazelcastTransaction extends Transaction {
             return obj;
     }
 
-    void revert(OBJ obj) {
-//        unSave(obj);
-        //todo
-        cache(obj.getClass()).remove(obj.getKey());
-    }
+    @Override
+    @SuppressWarnings("unchecked")
+    protected <T extends Cache> T cache(Class<? extends OBJ> clazz) {
+        CacheManager cacheManager = cachingProvider.getCacheManager();
 
-    private Map<Object, Object> cache(Class<? extends OBJ> clazz) {
-        return hc.getMap(clazz.getName());
+        Cache cache = ((cache = cacheManager.getCache(clazz.getName())) == null)
+                ? cacheManager.createCache(clazz.getName(), config)
+                : cache;
+
+        return (T) cache;
     }
 
     @Override
