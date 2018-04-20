@@ -9,21 +9,18 @@ public class TransactionFactory {
     }
 
     @SuppressWarnings("unchecked")
-    static <T extends Transaction> T getCurrentTransaction(){
+    static <T extends Transaction> T getCurrentTransaction() {
         return (T) TRANSACTION_THREAD_LOCAL.get();
     }
 
-
-    public static <T extends Transaction> T getOrCreateTransaction(CacheProvider cacheProvider) {
-        return getOrCreateTransaction(cacheProvider, null, false);
-    }
-
-    public static <T extends Transaction> T getOrCreateTransaction(CacheProvider cacheProvider, boolean abortCurrentIfAnotherProviderPresent) {
-        return getOrCreateTransaction(cacheProvider, null, abortCurrentIfAnotherProviderPresent);
+    public static <T extends Transaction> T getOrCreateTransaction(CacheProvider cacheProvider, Supplier<T> supplier) {
+        return getOrCreateTransaction(cacheProvider, supplier, false);
     }
 
     @SuppressWarnings("unchecked")
     public static <T extends Transaction> T getOrCreateTransaction(CacheProvider cacheProvider, Supplier<T> supplier, boolean abortCurrentIfAnotherProviderPresent) {
+        if (supplier == null)
+            throw new NullPointerException();
         Transaction transaction = TRANSACTION_THREAD_LOCAL.get();
         if (transaction != null) {
             if (transaction.getClass().isAssignableFrom(cacheProvider.getTransactionClass())) return (T) transaction;
@@ -34,7 +31,7 @@ public class TransactionFactory {
             }
         }
 
-        transaction = supplier == null? cacheProvider.getDefaultSupplier().get(): supplier.get();
+        transaction = supplier.get();
         TRANSACTION_THREAD_LOCAL.set(transaction);
         return (T) transaction;
     }
