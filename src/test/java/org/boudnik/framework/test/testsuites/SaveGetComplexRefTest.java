@@ -1,7 +1,7 @@
 package org.boudnik.framework.test.testsuites;
 
 import org.boudnik.framework.CacheProvider;
-import org.boudnik.framework.Transaction;
+import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.ComplexRefTestEntry;
 import org.boudnik.framework.test.core.RefTestEntry;
 import org.boudnik.framework.test.core.TestEntry;
@@ -18,11 +18,11 @@ public class SaveGetComplexRefTest extends TransactionTest {
 
     @Test
     public void testSaveGetCommit() {
-        Transaction tx = Transaction.instance();
+        Context tx = Context.instance();
         TestEntry entry = new TestEntry("SaveGetCommitComplexRef");
         RefTestEntry ref = new RefTestEntry("SaveGetCommitComplexRef", entry);
         ComplexRefTestEntry complexRef = new ComplexRefTestEntry("SaveGetCommitComplexRef", ref);
-        tx.txCommit(() -> {
+        tx.transaction(() -> {
             entry.save();
             ref.save();
             complexRef.save();
@@ -31,7 +31,7 @@ public class SaveGetComplexRefTest extends TransactionTest {
             assertSame(complexRef.getEntry(), ref);
         });
 
-        tx.txCommit(() -> {
+        tx.transaction(() -> {
             TestEntry actual = tx.get(TestEntry.class, "SaveGetCommitComplexRef");
             TestEntry expected = ref.getEntry();
             RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
@@ -44,7 +44,7 @@ public class SaveGetComplexRefTest extends TransactionTest {
 
     @Test
     public void testSaveGetRollback() {
-        Transaction tx = Transaction.instance();
+        Context tx = Context.instance();
         TestEntry entry = new TestEntry("SaveGetRollbackComplexRef").save();
         RefTestEntry ref = new RefTestEntry("SaveGetRollbackComplexRef", entry).save();
         ComplexRefTestEntry complexRef = new ComplexRefTestEntry("SaveGetRollbackComplexRef", ref).save();

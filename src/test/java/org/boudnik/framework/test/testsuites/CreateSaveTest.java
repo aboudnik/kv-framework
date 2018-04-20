@@ -1,7 +1,7 @@
 package org.boudnik.framework.test.testsuites;
 
 import org.boudnik.framework.CacheProvider;
-import org.boudnik.framework.Transaction;
+import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.TestEntry;
 import org.junit.Assert;
 import org.junit.Test;
@@ -14,14 +14,14 @@ public class CreateSaveTest extends TransactionTest {
 
     @Test
     public void testCreateSaveCommit() {
-        Transaction tx = Transaction.instance();
-        tx.txCommit(new TestEntry("testCreateSaveCommit"));
+        Context tx = Context.instance();
+        tx.transaction(new TestEntry("testCreateSaveCommit"));
         Assert.assertNotNull(tx.getAndClose(TestEntry.class, "testCreateSaveCommit"));
     }
 
     @Test
     public void testCreateSaveRollback() {
-        Transaction tx = Transaction.instance();
+        Context tx = Context.instance();
         TestEntry saveResult = new TestEntry("testCreateSaveRollback").save();
         Assert.assertNotNull(saveResult);
         tx.rollback();
@@ -30,8 +30,8 @@ public class CreateSaveTest extends TransactionTest {
 
     @Test(expected = RuntimeException.class)
     public void testCreateSaveRollbackViaException() {
-        Transaction tx = Transaction.instance();
-        tx.txCommit(() -> {
+        Context tx = Context.instance();
+        tx.transaction(() -> {
             new TestEntry("testCreateSaveRollback").save();
             throw new RuntimeException("Rollback Exception");
         });

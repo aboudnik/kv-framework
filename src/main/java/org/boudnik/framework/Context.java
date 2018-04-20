@@ -11,7 +11,7 @@ import java.util.Map;
  * @author Alexandre_Boudnik
  * @since 11/15/2017
  */
-public abstract class Transaction implements AutoCloseable {
+public abstract class Context implements AutoCloseable {
     private final Map<Class<? extends OBJ>, Map<Object, OBJ>> scope = new HashMap<>();
 
     public abstract <K, V extends OBJ> V get(Class<V> clazz, K identity);
@@ -111,8 +111,8 @@ public abstract class Transaction implements AutoCloseable {
 */
     }
 
-    public Transaction txCommit(OBJ obj) {
-        return txCommit(obj::save);
+    public Context transaction(OBJ obj) {
+        return transaction(obj::save);
     }
 
     @NotNull
@@ -134,7 +134,7 @@ public abstract class Transaction implements AutoCloseable {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Transaction> T txCommit(Transactionable transactionable) {
+    public <T extends Context> T transaction(Transactionable transactionable) {
         startTransactionIfNotStarted();
         try {
             transactionable.commit();
@@ -150,7 +150,7 @@ public abstract class Transaction implements AutoCloseable {
         return OBJ.TOMBSTONE == reference;
     }
 
-    public static <T extends Transaction> T instance() {
+    public static <T extends Context> T instance() {
         return TransactionFactory.getCurrentTransaction();
     }
 

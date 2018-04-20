@@ -4,7 +4,7 @@ import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.binary.BinaryObject;
 import org.boudnik.framework.OBJ;
-import org.boudnik.framework.Transaction;
+import org.boudnik.framework.Context;
 
 import javax.cache.Cache;
 import java.util.HashMap;
@@ -14,7 +14,7 @@ import java.util.Map;
  * @author Alexandre_Boudnik
  * @since 11/15/2017
  */
-public class IgniteTransaction extends Transaction {
+public class IgniteTransaction extends Context {
 
     private final Map<OBJ, BinaryObject> mementos = new HashMap<>();
     private final Ignite ignite;

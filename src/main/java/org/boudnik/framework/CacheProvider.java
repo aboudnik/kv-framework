@@ -7,13 +7,13 @@ public enum CacheProvider {
     IGNITE(IgniteTransaction.class),
     HAZELCAST(HazelcastTransaction.class);
 
-    private final Class<? extends Transaction> transactionClass;
+    private final Class<? extends Context> transactionClass;
 
-    <T extends Transaction> CacheProvider(Class<T> transactionClass) {
+    <T extends Context> CacheProvider(Class<T> transactionClass) {
         this.transactionClass = transactionClass;
     }
 
-    public Class<? extends Transaction> getTransactionClass() {
+    public Class<? extends Context> getTransactionClass() {
         return transactionClass;
     }
 }

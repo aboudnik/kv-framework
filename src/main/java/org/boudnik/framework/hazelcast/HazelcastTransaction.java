@@ -5,7 +5,7 @@ import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.transaction.TransactionContext;
 import org.boudnik.framework.OBJ;
-import org.boudnik.framework.Transaction;
+import org.boudnik.framework.Context;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -13,7 +13,7 @@ import javax.cache.spi.CachingProvider;
 import java.util.HashMap;
 import java.util.Map;
 
-public class HazelcastTransaction extends Transaction {
+public class HazelcastTransaction extends Context {
 
     private TransactionContext hazelcastTransactionContext;
     private final Map<OBJ, Object> mementos = new HashMap<>();
