@@ -62,26 +62,6 @@ public class HazelcastTransaction extends Transaction {
         mementos.clear();
     }
 
-    protected void doRollback(@SuppressWarnings("unused") Class<? extends OBJ> clazz, @SuppressWarnings("unused") Map<Object, OBJ> map, @SuppressWarnings("unused") boolean isTombstone) {
-/*
-        for (@SuppressWarnings("unused") Map.Entry<OBJ, BinaryObject> memento : mementos.entrySet()) {
-            BinaryObject binary = memento.getValue();
-            try {
-                Map<String, PropertyDescriptor> pds = new HashMap<>();
-                for (PropertyDescriptor pd : Introspector.getBeanInfo(clazz).getPropertyDescriptors())
-                    pds.put(pd.getName(), pd);
-                for (String field : binary.type().fieldNames()) {
-                    pds.get(field).setValue(field, binary.field(field));
-                }
-                for (PropertyDescriptor pd : Introspector.getBeanInfo(clazz).getPropertyDescriptors())
-                    pd.setValue(pd.getName(), binary.field(pd.getName()));
-            } catch (IntrospectionException e) {
-                e.printStackTrace();
-            }
-        }
-*/
-    }
-
     @SuppressWarnings("unchecked")
     public <K, V extends OBJ> V get(Class<V> clazz, K identity) {
         Map<Object, OBJ> map = getMap(clazz);

@@ -16,7 +16,6 @@ public abstract class Transaction implements AutoCloseable {
     public abstract <K, V extends OBJ> V get(Class<V> clazz, K identity);
     protected abstract void doRemove(Class<? extends OBJ> clazz, Map<Object, OBJ> map);
     protected abstract void doPut(Class<? extends OBJ> clazz, Map<Object, OBJ> map);
-    protected abstract void doRollback(@SuppressWarnings("unused") Class<? extends OBJ> clazz, @SuppressWarnings("unused") Map<Object, OBJ> map, @SuppressWarnings("unused") boolean isTombstone);
     protected abstract void startTransactionIfNotStarted();
     protected abstract boolean isTransactionExist();
 
@@ -69,6 +68,26 @@ public abstract class Transaction implements AutoCloseable {
         } else {
             doPut(clazz, map);
         }
+    }
+
+    private void doRollback(@SuppressWarnings("unused") Class<? extends OBJ> clazz, @SuppressWarnings("unused") Map<Object, OBJ> map, @SuppressWarnings("unused") boolean isTombstone) {
+/*
+        for (@SuppressWarnings("unused") Map.Entry<OBJ, BinaryObject> memento : mementos.entrySet()) {
+            BinaryObject binary = memento.getValue();
+            try {
+                Map<String, PropertyDescriptor> pds = new HashMap<>();
+                for (PropertyDescriptor pd : Introspector.getBeanInfo(clazz).getPropertyDescriptors())
+                    pds.put(pd.getName(), pd);
+                for (String field : binary.type().fieldNames()) {
+                    pds.get(field).setValue(field, binary.field(field));
+                }
+                for (PropertyDescriptor pd : Introspector.getBeanInfo(clazz).getPropertyDescriptors())
+                    pd.setValue(pd.getName(), binary.field(pd.getName()));
+            } catch (IntrospectionException e) {
+                e.printStackTrace();
+            }
+        }
+*/
     }
 
     public Transaction txCommit(OBJ obj) {
