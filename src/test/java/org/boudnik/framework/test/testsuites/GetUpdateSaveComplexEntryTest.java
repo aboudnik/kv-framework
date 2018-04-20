@@ -1,7 +1,7 @@
 package org.boudnik.framework.test.testsuites;
 
 import org.boudnik.framework.CacheProvider;
-import org.boudnik.framework.Transaction;
+import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.ComplexTestEntry;
 import org.boudnik.framework.test.core.ComplexTestEntry2;
 import org.boudnik.framework.test.core.TestEntry;
@@ -18,15 +18,15 @@ public class GetUpdateSaveComplexEntryTest extends TransactionTest {
 
     @Test
     public void testGetUpdateSaveCommitComplexTestEntry() {
-        Transaction tx = Transaction.instance();
+        Context tx = Context.instance();
         ComplexTestEntry2 te = new ComplexTestEntry2(new ComplexTestEntry(new TestEntry("testUpdateCommit")));
-        tx.txCommit(te);
+        tx.transaction(te);
 
         ComplexTestEntry key = te.getKey();
         ComplexTestEntry2 entry = tx.get(ComplexTestEntry2.class, key);
         Assert.assertNotNull(entry);
 
-        tx.txCommit(() -> {
+        tx.transaction(() -> {
             entry.setValue(NEW_VALUE);
             entry.getKey().setValue(NEW_VALUE);
             entry.save();
@@ -38,9 +38,9 @@ public class GetUpdateSaveComplexEntryTest extends TransactionTest {
 
     @Test
     public void testGetUpdateSaveRollbackComplexTestEntry() {
-        Transaction tx = Transaction.instance();
+        Context tx = Context.instance();
         ComplexTestEntry2 te = new ComplexTestEntry2(new ComplexTestEntry(new TestEntry("testUpdateRollback")));
-        tx.txCommit(te);
+        tx.transaction(te);
 
         ComplexTestEntry key = te.getKey();
         ComplexTestEntry2 entry = tx.get(ComplexTestEntry2.class, key);
@@ -58,15 +58,15 @@ public class GetUpdateSaveComplexEntryTest extends TransactionTest {
 
     @Test(expected = RuntimeException.class)
     public void testGetUpdateSaveRollbackViaExceptionComplexTestEntry() {
-        Transaction tx = Transaction.instance();
+        Context tx = Context.instance();
         ComplexTestEntry2 te = new ComplexTestEntry2(new ComplexTestEntry(new TestEntry("testUpdateRollback")));
-        tx.txCommit(te);
+        tx.transaction(te);
 
         ComplexTestEntry key = te.getKey();
         ComplexTestEntry2 entry = tx.get(ComplexTestEntry2.class, key);
         Assert.assertNotNull(entry);
 
-        tx.txCommit(() -> {
+        tx.transaction(() -> {
             entry.setValue(NEW_VALUE);
             entry.getKey().setValue(NEW_VALUE);
             entry.save();

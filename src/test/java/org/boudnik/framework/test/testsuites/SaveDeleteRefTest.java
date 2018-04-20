@@ -1,7 +1,7 @@
 package org.boudnik.framework.test.testsuites;
 
 import org.boudnik.framework.CacheProvider;
-import org.boudnik.framework.Transaction;
+import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.RefTestEntry;
 import org.boudnik.framework.test.core.TestEntry;
 import org.junit.Test;
@@ -18,13 +18,13 @@ public class SaveDeleteRefTest extends TransactionTest {
 
     @Test
     public void testSaveDeleteCommit() {
-        Transaction tx = Transaction.instance();
-        tx.txCommit(() -> {
+        Context tx = Context.instance();
+        tx.transaction(() -> {
             TestEntry entry = new TestEntry("CreateSaveDeleteCommitRef").save();
             ref = new RefTestEntry("CreateSaveDeleteCommitRef", entry).save();
         });
 
-        tx.txCommit(() -> {
+        tx.transaction(() -> {
             TestEntry actual = tx.get(TestEntry.class, "CreateSaveDeleteCommitRef");
             actual.delete();
         });
@@ -37,8 +37,8 @@ public class SaveDeleteRefTest extends TransactionTest {
 
     @Test
     public void testSaveDeleteRollback() {
-        Transaction tx = Transaction.instance();
-        tx.txCommit(() -> {
+        Context tx = Context.instance();
+        tx.transaction(() -> {
             TestEntry entry = new TestEntry("CreateSaveDeleteRollbackRef").save();
             ref = new RefTestEntry("CreateSaveDeleteRollbackRef", entry).save();
         });
@@ -47,7 +47,7 @@ public class SaveDeleteRefTest extends TransactionTest {
         actual.delete();
         tx.rollback();
 
-        tx.txCommit(() -> {
+        tx.transaction(() -> {
             TestEntry actualEntry = tx.get(TestEntry.class, "CreateSaveDeleteRollbackRef");
             assertNotNull(actualEntry);
             RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());

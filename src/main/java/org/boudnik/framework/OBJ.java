@@ -21,16 +21,16 @@ public interface OBJ<K> extends Serializable {
 
     @SuppressWarnings("unchecked")
     default <T> T save() {
-        return (T) Transaction.instance().save(this);
+        return (T) Context.instance().save(this);
     }
 
     @SuppressWarnings("unchecked")
     default <T> T save(K key) {
-        return (T) Transaction.instance().save(this, key);
+        return (T) Context.instance().save(this, key);
     }
 
     default void delete() {
-        Transaction.instance().delete(this);
+        Context.instance().delete(this);
     }
 
     //  default void revert() {
@@ -121,12 +121,12 @@ public interface OBJ<K> extends Serializable {
          */
         public V get() {
             if (reference == null)
-                return identity == null ? null : (reference = Transaction.instance().get(clazz, identity));
-            V inScope = Transaction.instance().get(clazz, reference.getKey());
-            if (Transaction.isDeleted(inScope))
+                return identity == null ? null : (reference = Context.instance().get(clazz, identity));
+            V inScope = Context.instance().get(clazz, reference.getKey());
+            if (Context.isDeleted(inScope))
                 return null;
             if (inScope != reference)
-                return reference = Transaction.instance().get(clazz, identity);
+                return reference = Context.instance().get(clazz, identity);
             return reference;
         }
 

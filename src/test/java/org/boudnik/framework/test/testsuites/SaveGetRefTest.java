@@ -1,7 +1,7 @@
 package org.boudnik.framework.test.testsuites;
 
 import org.boudnik.framework.CacheProvider;
-import org.boudnik.framework.Transaction;
+import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.RefTestEntry;
 import org.boudnik.framework.test.core.TestEntry;
 import org.junit.Test;
@@ -17,17 +17,17 @@ public class SaveGetRefTest extends TransactionTest {
 
     @Test
     public void testSaveGetCommit() {
-        Transaction tx = Transaction.instance();
+        Context tx = Context.instance();
         TestEntry entry = new TestEntry("SaveGetCommitRef");
         RefTestEntry ref = new RefTestEntry("SaveGetCommitRef", entry);
-        tx.txCommit(() -> {
+        tx.transaction(() -> {
             entry.save();
             ref.save();
             assertSame(tx.get(TestEntry.class, "SaveGetCommitRef"), entry);
             assertSame(ref.getEntry(), entry);
         });
 
-        tx.txCommit(() -> {
+        tx.transaction(() -> {
             TestEntry actual = tx.get(TestEntry.class, "SaveGetCommitRef");
             TestEntry expected = ref.getEntry();
             assertSame(actual, expected);
@@ -38,7 +38,7 @@ public class SaveGetRefTest extends TransactionTest {
 
     @Test
     public void testSaveGetRollback() {
-        Transaction tx = Transaction.instance();
+        Context tx = Context.instance();
         TestEntry entry = new TestEntry("SaveGetRollbackRef").save();
         RefTestEntry ref = new RefTestEntry("SaveGetRollbackRef", entry).save();
 

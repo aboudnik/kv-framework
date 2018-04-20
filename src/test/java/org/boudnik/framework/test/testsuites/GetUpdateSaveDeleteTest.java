@@ -1,7 +1,7 @@
 package org.boudnik.framework.test.testsuites;
 
 import org.boudnik.framework.CacheProvider;
-import org.boudnik.framework.Transaction;
+import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.MutableTestEntry;
 import org.junit.Assert;
 import org.junit.Test;
@@ -16,14 +16,14 @@ public class GetUpdateSaveDeleteTest extends TransactionTest {
 
     @Test
     public void testGetUpdateSaveDeleteCommit() {
-        Transaction tx = Transaction.instance();
-        tx.txCommit(new MutableTestEntry("testGetUpdateSaveDeleteCommit"));
+        Context tx = Context.instance();
+        tx.transaction(new MutableTestEntry("testGetUpdateSaveDeleteCommit"));
 
         final MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteCommit");
         Assert.assertNotNull(entry);
         Assert.assertNull(entry.getValue());
 
-        tx.txCommit(() -> {
+        tx.transaction(() -> {
             entry.setValue(NEW_VALUE);
             entry.save();
             entry.delete();
@@ -33,8 +33,8 @@ public class GetUpdateSaveDeleteTest extends TransactionTest {
 
     @Test
     public void testGetUpdateSaveDeleteRollback() {
-        Transaction tx = Transaction.instance();
-        tx.txCommit(new MutableTestEntry("testGetUpdateSaveDeleteRollback"));
+        Context tx = Context.instance();
+        tx.transaction(new MutableTestEntry("testGetUpdateSaveDeleteRollback"));
 
         MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteRollback");
         Assert.assertNotNull(entry);
@@ -52,14 +52,14 @@ public class GetUpdateSaveDeleteTest extends TransactionTest {
 
     @Test(expected = RuntimeException.class)
     public void testGetUpdateSaveDeleteRollbackViaException() {
-        Transaction tx = Transaction.instance();
-        tx.txCommit(new MutableTestEntry("testGetUpdateSaveDeleteRollback"));
+        Context tx = Context.instance();
+        tx.transaction(new MutableTestEntry("testGetUpdateSaveDeleteRollback"));
 
         final MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteRollback");
         Assert.assertNotNull(entry);
         Assert.assertNull(entry.getValue());
 
-        tx.txCommit(() -> {
+        tx.transaction(() -> {
             entry.setValue(NEW_VALUE);
             entry.save();
             entry.delete();

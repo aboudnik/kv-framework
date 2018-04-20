@@ -1,7 +1,7 @@
 package org.boudnik.framework.test.testsuites;
 
 import org.boudnik.framework.CacheProvider;
-import org.boudnik.framework.Transaction;
+import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.ComplexRefTestEntry;
 import org.boudnik.framework.test.core.RefTestEntry;
 import org.boudnik.framework.test.core.TestEntry;
@@ -20,19 +20,19 @@ public class SaveDeleteComplexRefTest extends TransactionTest {
 
     @Test
     public void testSaveDeleteOBJCommit() {
-        Transaction tx = Transaction.instance();
-        tx.txCommit(() -> {
+        Context tx = Context.instance();
+        tx.transaction(() -> {
             TestEntry entry = new TestEntry("CreateSaveDeleteOBJCommit").save();
             ref = new RefTestEntry("CreateSaveDeleteOBJCommit", entry).save();
             complexRef = new ComplexRefTestEntry("CreateSaveDeleteOBJCommit", ref).save();
         });
 
-        tx.txCommit(() -> {
+        tx.transaction(() -> {
             TestEntry actual = tx.get(TestEntry.class, "CreateSaveDeleteOBJCommit");
             actual.delete();
         });
 
-        tx.txCommit(() -> {
+        tx.transaction(() -> {
             assertNull(tx.get(TestEntry.class, "CreateSaveDeleteOBJCommit"));
             RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
             ComplexRefTestEntry actualComplexRef = tx.get(ComplexRefTestEntry.class, complexRef.getKey());
@@ -44,19 +44,19 @@ public class SaveDeleteComplexRefTest extends TransactionTest {
 
     @Test
     public void testSaveDeleteRefCommit() {
-        Transaction tx = Transaction.instance();
-        tx.txCommit(() -> {
+        Context tx = Context.instance();
+        tx.transaction(() -> {
             TestEntry entry = new TestEntry("CreateSaveDeleteREFCommit").save();
             ref = new RefTestEntry("CreateSaveDeleteREFCommit", entry).save();
             complexRef = new ComplexRefTestEntry("CreateSaveDeleteREFCommit", ref).save();
         });
 
-        tx.txCommit(() -> {
+        tx.transaction(() -> {
             RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
             actualRef.delete();
         });
 
-        tx.txCommit(() -> {
+        tx.transaction(() -> {
             assertNull(tx.get(RefTestEntry.class, ref.getKey()));
             TestEntry actual = tx.get(TestEntry.class, "CreateSaveDeleteREFCommit");
             assertSame(actual, ref.getEntry());
@@ -67,8 +67,8 @@ public class SaveDeleteComplexRefTest extends TransactionTest {
 
     @Test
     public void testSaveDeleteOBJRollback() {
-        Transaction tx = Transaction.instance();
-        tx.txCommit(() -> {
+        Context tx = Context.instance();
+        tx.transaction(() -> {
             TestEntry entry = new TestEntry("CreateSaveDeleteOBJRollback").save();
             ref = new RefTestEntry("CreateSaveDeleteOBJRollback", entry).save();
             complexRef = new ComplexRefTestEntry("CreateSaveDeleteOBJRollback", ref).save();
@@ -78,7 +78,7 @@ public class SaveDeleteComplexRefTest extends TransactionTest {
         entryToBeDeleted.delete();
         tx.rollback();
 
-        tx.txCommit(() -> {
+        tx.transaction(() -> {
             TestEntry actualEntry = tx.get(TestEntry.class, "CreateSaveDeleteOBJRollback");
             assertNotNull(actualEntry);
             RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
@@ -91,8 +91,8 @@ public class SaveDeleteComplexRefTest extends TransactionTest {
 
     @Test
     public void testSaveDeleteRefRollback() {
-        Transaction tx = Transaction.instance();
-        tx.txCommit(() -> {
+        Context tx = Context.instance();
+        tx.transaction(() -> {
             TestEntry entry = new TestEntry("CreateSaveDeleteREFRollback").save();
             ref = new RefTestEntry("CreateSaveDeleteREFRollback", entry).save();
             complexRef = new ComplexRefTestEntry("CreateSaveDeleteREFRollback", ref).save();
@@ -102,7 +102,7 @@ public class SaveDeleteComplexRefTest extends TransactionTest {
         refToBeDeleted.delete();
         tx.rollback();
 
-        tx.txCommit(() -> {
+        tx.transaction(() -> {
             RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
             assertNotNull(actualRef);
             TestEntry actual = tx.get(TestEntry.class, "CreateSaveDeleteREFRollback");

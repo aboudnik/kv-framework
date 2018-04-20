@@ -1,7 +1,7 @@
 package org.boudnik.framework.test.testsuites;
 
 import org.boudnik.framework.CacheProvider;
-import org.boudnik.framework.Transaction;
+import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.MutableTestEntry;
 import org.junit.Assert;
 import org.junit.Test;
@@ -16,14 +16,14 @@ public class GetUpdateSaveTest extends TransactionTest {
 
     @Test
     public void testGetUpdateSaveCommit() {
-        Transaction tx = Transaction.instance();
-        tx.txCommit(new MutableTestEntry("testGetUpdateSaveCommit"));
+        Context tx = Context.instance();
+        tx.transaction(new MutableTestEntry("testGetUpdateSaveCommit"));
 
         final MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveCommit");
         Assert.assertNotNull(entry);
         Assert.assertNull(entry.getValue());
 
-        tx.txCommit(() -> {
+        tx.transaction(() -> {
             entry.setValue(NEW_VALUE);
             entry.save();
         });
@@ -32,8 +32,8 @@ public class GetUpdateSaveTest extends TransactionTest {
 
     @Test
     public void testGetUpdateSaveRollback() {
-        Transaction tx = Transaction.instance();
-        tx.txCommit(new MutableTestEntry("testGetUpdateSaveRollback"));
+        Context tx = Context.instance();
+        tx.transaction(new MutableTestEntry("testGetUpdateSaveRollback"));
 
         final MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveRollback");
         Assert.assertNotNull(entry);
@@ -48,14 +48,14 @@ public class GetUpdateSaveTest extends TransactionTest {
 
     @Test(expected = RuntimeException.class)
     public void testGetUpdateSaveRollbackViaException() {
-        Transaction tx = Transaction.instance();
-        tx.txCommit(new MutableTestEntry("testGetUpdateSaveRollback"));
+        Context tx = Context.instance();
+        tx.transaction(new MutableTestEntry("testGetUpdateSaveRollback"));
 
         final MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveRollback");
         Assert.assertNotNull(entry);
         Assert.assertNull(entry.getValue());
 
-        tx.txCommit(() -> {
+        tx.transaction(() -> {
             entry.setValue(NEW_VALUE);
             entry.save();
             throw new RuntimeException("Rollback Exception");

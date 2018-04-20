@@ -1,7 +1,7 @@
 package org.boudnik.framework.test.testsuites;
 
 import org.boudnik.framework.CacheProvider;
-import org.boudnik.framework.Transaction;
+import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.ComplexTestEntry;
 import org.boudnik.framework.test.core.ComplexTestEntry2;
 import org.boudnik.framework.test.core.TestEntry;
@@ -19,22 +19,22 @@ public class GetDeleteComplexEntryTest extends TransactionTest {
 
     @Test
     public void testGetDeleteCommitComplexTestEntry2() {
-        Transaction tx = Transaction.instance();
+        Context tx = Context.instance();
         ComplexTestEntry2 te = new ComplexTestEntry2(new ComplexTestEntry(new TestEntry("testGetDeleteCommitComplex")));
-        tx.txCommit(te);
+        tx.transaction(te);
 
         ComplexTestEntry key = te.getKey();
         ComplexTestEntry2 entry = tx.get(ComplexTestEntry2.class, key);
         Assert.assertNotNull(entry);
-        tx.txCommit(entry::delete);
+        tx.transaction(entry::delete);
         Assert.assertNull(tx.getAndClose(ComplexTestEntry2.class, key));
     }
 
     @Test
     public void testGetDeleteRollbackComplexTestEntry2() {
-        Transaction tx = Transaction.instance();
+        Context tx = Context.instance();
         ComplexTestEntry2 te = new ComplexTestEntry2(new ComplexTestEntry(new TestEntry("testCommitDeleteRollback")));
-        tx.txCommit(te);
+        tx.transaction(te);
 
         ComplexTestEntry key = te.getKey();
         ComplexTestEntry2 entry = tx.get(ComplexTestEntry2.class, key);
@@ -47,15 +47,15 @@ public class GetDeleteComplexEntryTest extends TransactionTest {
 
     @Test(expected = RuntimeException.class)
     public void testGetDeleteRollbackViaExceptionComplexTestEntry2() {
-        Transaction tx = Transaction.instance();
+        Context tx = Context.instance();
         ComplexTestEntry2 te = new ComplexTestEntry2(new ComplexTestEntry(new TestEntry("testCommitDeleteRollback")));
-        tx.txCommit(te);
+        tx.transaction(te);
 
         ComplexTestEntry key = te.getKey();
         ComplexTestEntry2 entry = tx.get(ComplexTestEntry2.class, key);
         Assert.assertNotNull(entry);
 
-        tx.txCommit(() -> {
+        tx.transaction(() -> {
             entry.delete();
             throw new RuntimeException("RollbackException");
         });
