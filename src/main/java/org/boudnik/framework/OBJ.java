@@ -1,11 +1,8 @@
 package org.boudnik.framework;
 
-import org.apache.ignite.binary.BinaryObject;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
@@ -27,19 +24,20 @@ public interface OBJ<K> extends Serializable {
         return (T) Transaction.instance().save(this);
     }
 
-    default void save(K key) {
-        Transaction.instance().save(this, key);
+    @SuppressWarnings("unchecked")
+    default <T> T save(K key) {
+        return (T) Transaction.instance().save(this, key);
     }
 
     default void delete() {
         Transaction.instance().delete(this);
     }
 
-    default void revert() {
-        Transaction.instance().revert(this);
-    }
+    //  default void revert() {
+    //      Transaction.instance().revert(this);
+    //  }
 
-    default void onCommit(BinaryObject current, BinaryObject memento) {
+    default void onCommit(Object current, Object memento) {
 
     }
 
@@ -47,8 +45,7 @@ public interface OBJ<K> extends Serializable {
 
     }
 
-    OBJ<Object> TOMBSTONE = new OBJ<Object>() {
-    };
+    OBJ<Object> TOMBSTONE = new OBJ<Object>(){} ;
 
     abstract class Implementation<K> implements OBJ<K> {
 
@@ -71,7 +68,7 @@ public interface OBJ<K> extends Serializable {
 
     }
 
-    abstract class Historical<K> extends Implementation<K> {
+/*    abstract class Historical<K> extends Implementation<K> {
         static final String REF = Implementation.REF.class.getName();
         List<History> history = new ArrayList<>();
 
@@ -80,9 +77,9 @@ public interface OBJ<K> extends Serializable {
         }
 
         @Override
-        public void onCommit(BinaryObject current, BinaryObject memento) {
-            for (String field : current.type().fieldNames()) {
-                Object c = current.field(field);
+        public void onCommit(BinaryObject instance, BinaryObject memento) {
+            for (String field : instance.type().fieldNames()) {
+                Object c = instance.field(field);
                 Object m = memento.field(field);
                 if (m == null) {
                     if (c != null)
@@ -104,9 +101,9 @@ public interface OBJ<K> extends Serializable {
 
     static Object getIdentity(Object o) {
         return ((BinaryObject) o).field("identity");
-    }
+    }*/
 
-    class REF<I, V extends OBJ<I>> {
+    class REF<I, V extends OBJ<I>> implements Serializable{
         private final Class<V> clazz;
         private transient V reference;
 

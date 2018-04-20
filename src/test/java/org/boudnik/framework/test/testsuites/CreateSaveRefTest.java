@@ -1,20 +1,19 @@
 package org.boudnik.framework.test.testsuites;
 
+import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Transaction;
 import org.boudnik.framework.test.core.RefTestEntry;
 import org.boudnik.framework.test.core.TestEntry;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertSame;
 
-public class CreateSaveRefTest {
+public class CreateSaveRefTest extends TransactionTest {
 
     private RefTestEntry ref;
 
-    @BeforeClass
-    public static void beforeAll() {
-        Transaction.instance().withCache(RefTestEntry.class, TestEntry.class);
+    public CreateSaveRefTest(CacheProvider input) {
+        super(input, RefTestEntry.class, TestEntry.class);
     }
 
     @Test
@@ -22,7 +21,7 @@ public class CreateSaveRefTest {
         Transaction tx = Transaction.instance();
         tx.txCommit(() -> {
             TestEntry entry = new TestEntry("test").save();
-            ref = new RefTestEntry(1, entry).save();
+            ref = new RefTestEntry("test", entry).save();
             assertSame(tx.get(TestEntry.class, "test"), entry);
             assertSame(ref.getEntry(), entry);
         });

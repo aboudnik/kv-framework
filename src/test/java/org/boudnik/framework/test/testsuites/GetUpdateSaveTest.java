@@ -1,18 +1,17 @@
 package org.boudnik.framework.test.testsuites;
 
+import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Transaction;
 import org.boudnik.framework.test.core.MutableTestEntry;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class GetUpdateSaveTest {
+public class GetUpdateSaveTest extends TransactionTest {
 
     private static final String NEW_VALUE = "New Value";
 
-    @BeforeClass
-    public static void beforeAll(){
-        try(Transaction ignored = Transaction.instance().withCache(MutableTestEntry.class)){}
+    public GetUpdateSaveTest(CacheProvider input) {
+        super(input, MutableTestEntry.class);
     }
 
     @Test
@@ -25,9 +24,9 @@ public class GetUpdateSaveTest {
         Assert.assertNull(entry.getValue());
 
         tx.txCommit(() -> {
-                    entry.setValue(NEW_VALUE);
-                    entry.save();
-                });
+            entry.setValue(NEW_VALUE);
+            entry.save();
+        });
         Assert.assertEquals(NEW_VALUE, tx.get(MutableTestEntry.class, "testGetUpdateSaveCommit").getValue());
     }
 
@@ -41,7 +40,8 @@ public class GetUpdateSaveTest {
         Assert.assertNull(entry.getValue());
 
         entry.setValue(NEW_VALUE);
-        entry.save();
+        MutableTestEntry saveResult = entry.save();
+        Assert.assertNotNull(saveResult);
         tx.rollback();
         Assert.assertNull(tx.get(MutableTestEntry.class, "testGetUpdateSaveRollback").getValue());
     }
@@ -56,10 +56,10 @@ public class GetUpdateSaveTest {
         Assert.assertNull(entry.getValue());
 
         tx.txCommit(() -> {
-                    entry.setValue(NEW_VALUE);
-                    entry.save();
-                    throw new RuntimeException("Rollback Exception");
-                });
+            entry.setValue(NEW_VALUE);
+            entry.save();
+            throw new RuntimeException("Rollback Exception");
+        });
         Assert.assertNull(tx.get(MutableTestEntry.class, "testGetUpdateSaveRollback").getValue());
     }
 }

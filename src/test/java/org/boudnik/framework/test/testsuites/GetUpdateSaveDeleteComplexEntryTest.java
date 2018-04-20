@@ -1,20 +1,22 @@
 package org.boudnik.framework.test.testsuites;
 
+import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Transaction;
 import org.boudnik.framework.test.core.ComplexTestEntry;
 import org.boudnik.framework.test.core.ComplexTestEntry2;
 import org.boudnik.framework.test.core.TestEntry;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
-public class GetUpdateSaveDeleteComplexEntryTest {
+@RunWith(Parameterized.class)
+public class GetUpdateSaveDeleteComplexEntryTest extends TransactionTest {
 
     private static final String NEW_VALUE = "New Value";
 
-    @BeforeClass
-    public static void beforeAll(){
-        Transaction.instance().withCache(ComplexTestEntry2.class);
+    public GetUpdateSaveDeleteComplexEntryTest(CacheProvider input) {
+        super(input, ComplexTestEntry2.class);
     }
 
     @Test
@@ -54,7 +56,8 @@ public class GetUpdateSaveDeleteComplexEntryTest {
 
         entry.setValue(NEW_VALUE);
         entry.getKey().setValue(NEW_VALUE);
-        entry.save();
+        ComplexTestEntry2 saveResult = entry.save();
+        Assert.assertNotNull(saveResult);
         entry.delete();
         tx.rollback();
         ComplexTestEntry2 notUpdatedEntry = tx.getAndClose(ComplexTestEntry2.class, key);

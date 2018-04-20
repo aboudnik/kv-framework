@@ -1,16 +1,17 @@
 package org.boudnik.framework.test.testsuites;
 
+import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Transaction;
 import org.boudnik.framework.test.core.TestEntry;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class CreateSaveDeleteTest {
 
-    @BeforeClass
-    public static void beforeAll(){
-        Transaction.instance().withCache(TestEntry.class);
+public class CreateSaveDeleteTest extends TransactionTest {
+
+
+    public CreateSaveDeleteTest(CacheProvider input) {
+        super(input, TestEntry.class);
     }
 
     @Test
@@ -48,7 +49,7 @@ public class CreateSaveDeleteTest {
 
         tx.txCommit(() -> {
             entry.delete();
-            throw  new RuntimeException("RollbackException");
+            throw new RuntimeException("RollbackException");
         });
         Assert.assertNotNull(tx.getAndClose(TestEntry.class, "testCommitDeleteRollback"));
     }

@@ -1,6 +1,9 @@
 package org.boudnik.framework.test;
 
+import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Transaction;
+import org.boudnik.framework.TransactionFactory;
+import org.boudnik.framework.ignite.IgniteTransaction;
 import org.boudnik.framework.test.core.TestEntry;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -10,7 +13,7 @@ public class ObjSaveTest {
 
     @BeforeClass
     public static void beforeAll(){
-        Transaction.instance().withCache(TestEntry.class);
+        TransactionFactory.<IgniteTransaction>getOrCreateTransaction(CacheProvider.IGNITE, true).withCache(TestEntry.class);
     }
 
     @Test
