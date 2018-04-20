@@ -2,6 +2,7 @@ package org.boudnik.framework;
 
 import org.jetbrains.annotations.NotNull;
 
+import javax.cache.Cache;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,14 +15,14 @@ public abstract class Transaction implements AutoCloseable {
     private final Map<Class<? extends OBJ>, Map<Object, OBJ>> scope = new HashMap<>();
 
     public abstract <K, V extends OBJ> V get(Class<V> clazz, K identity);
-    protected abstract void doRemove(Class<? extends OBJ> clazz, Map<Object, OBJ> map);
     protected abstract void doPut(Class<? extends OBJ> clazz, Map<Object, OBJ> map);
-    protected abstract void doRollback(@SuppressWarnings("unused") Class<? extends OBJ> clazz, @SuppressWarnings("unused") Map<Object, OBJ> map, @SuppressWarnings("unused") boolean isTombstone);
     protected abstract void startTransactionIfNotStarted();
     protected abstract boolean isTransactionExist();
 
     protected abstract void engineSpecificCommitAction();
     protected abstract void engineSpecificRollbackAction();
+
+    protected abstract <T extends Cache> T cache(Class<? extends OBJ> clazz);
 
     public OBJ save(OBJ obj) {
         return save(obj, obj.getKey());
@@ -34,6 +35,13 @@ public abstract class Transaction implements AutoCloseable {
 
     public void delete(OBJ obj) {
         getMap(obj.getClass()).put(obj.getKey(), OBJ.TOMBSTONE);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected void revert(OBJ obj) {
+//        unSave(obj);
+        //todo
+        cache(obj.getClass()).remove(obj.getKey());
     }
 
     @NotNull
@@ -69,6 +77,32 @@ public abstract class Transaction implements AutoCloseable {
         } else {
             doPut(clazz, map);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void doRemove(Class<? extends OBJ> clazz, Map<Object, OBJ> map) {
+        //   map.keySet().forEach(cache(clazz)::remove);
+        cache(clazz).removeAll(map.keySet());
+    }
+
+    private void doRollback(@SuppressWarnings("unused") Class<? extends OBJ> clazz, @SuppressWarnings("unused") Map<Object, OBJ> map, @SuppressWarnings("unused") boolean isTombstone) {
+/*
+        for (@SuppressWarnings("unused") Map.Entry<OBJ, BinaryObject> memento : mementos.entrySet()) {
+            BinaryObject binary = memento.getValue();
+            try {
+                Map<String, PropertyDescriptor> pds = new HashMap<>();
+                for (PropertyDescriptor pd : Introspector.getBeanInfo(clazz).getPropertyDescriptors())
+                    pds.put(pd.getName(), pd);
+                for (String field : binary.type().fieldNames()) {
+                    pds.get(field).setValue(field, binary.field(field));
+                }
+                for (PropertyDescriptor pd : Introspector.getBeanInfo(clazz).getPropertyDescriptors())
+                    pd.setValue(pd.getName(), binary.field(pd.getName()));
+            } catch (IntrospectionException e) {
+                e.printStackTrace();
+            }
+        }
+*/
     }
 
     public Transaction txCommit(OBJ obj) {
