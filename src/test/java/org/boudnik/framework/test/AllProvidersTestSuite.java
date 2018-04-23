@@ -8,5 +8,5 @@ import org.junit.runners.Suite;
         IgniteTransactionTestSuite.class,
         HazelcastTransactionTestSuite.class,
 })
-public class AllProvidersTestSuites {
+public class AllProvidersTestSuite {
 }

@@ -1,27 +1,14 @@
 package org.boudnik.framework.test.testsuites;
 
-import org.apache.ignite.Ignition;
-import org.apache.ignite.configuration.IgniteConfiguration;
-import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Context;
-import org.boudnik.framework.TransactionFactory;
-import org.boudnik.framework.ignite.IgniteTransaction;
 import org.boudnik.framework.test.core.RefTestEntry;
 import org.boudnik.framework.test.core.TestEntry;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
-public class SaveGetRefTest {
-    @BeforeClass
-    public static void beforeAll() {
-        if (TransactionFactory.getCurrentTransaction() == null) {
-            TransactionFactory.getOrCreateTransaction(CacheProvider.IGNITE, () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true)
-                    .withCache(RefTestEntry.class, TestEntry.class);
-        }
-    }
+public class SaveGetRefTest extends TransactionTest  {
 
     @Test
     public void testSaveGetCommit() {
