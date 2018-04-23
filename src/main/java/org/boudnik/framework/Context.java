@@ -18,6 +18,8 @@ public abstract class Context implements AutoCloseable {
 
     protected abstract void doPut(Class<? extends OBJ> clazz, Map<Object, OBJ> map);
 
+    protected abstract void doRollback(@SuppressWarnings("unused") Class<? extends OBJ> clazz, @SuppressWarnings("unused") Map<Object, OBJ> map, @SuppressWarnings("unused") boolean isTombstone) throws IllegalAccessException;
+
     protected abstract void startTransactionIfNotStarted();
 
     protected abstract boolean isTransactionExist();
@@ -91,26 +93,6 @@ public abstract class Context implements AutoCloseable {
         cache(clazz).removeAll(map.keySet());
     }
 
-    private void doRollback(@SuppressWarnings("unused") Class<? extends OBJ> clazz, @SuppressWarnings("unused") Map<Object, OBJ> map, @SuppressWarnings("unused") boolean isTombstone) {
-/*
-        for (@SuppressWarnings("unused") Map.Entry<OBJ, BinaryObject> memento : mementos.entrySet()) {
-            BinaryObject binary = memento.getValue();
-            try {
-                Map<String, PropertyDescriptor> pds = new HashMap<>();
-                for (PropertyDescriptor pd : Introspector.getBeanInfo(clazz).getPropertyDescriptors())
-                    pds.put(pd.getName(), pd);
-                for (String field : binary.type().fieldNames()) {
-                    pds.get(field).setValue(field, binary.field(field));
-                }
-                for (PropertyDescriptor pd : Introspector.getBeanInfo(clazz).getPropertyDescriptors())
-                    pd.setValue(pd.getName(), binary.field(pd.getName()));
-            } catch (IntrospectionException e) {
-                e.printStackTrace();
-            }
-        }
-*/
-    }
-
     public Context transaction(OBJ obj) {
         return transaction(obj::save);
     }
@@ -166,7 +148,7 @@ public abstract class Context implements AutoCloseable {
         return value;
     }
 
-    private void walk(Worker worker) {
+    private void walk(Worker worker) throws IllegalAccessException {
         for (Map.Entry<Class<? extends OBJ>, Map<Object, OBJ>> byClass : scope.entrySet()) {
 
             Map<Boolean, Map<Object, OBJ>> tombstoneNotTombstoneMap = getTombstoneNotTombstoneMap(byClass);
@@ -186,7 +168,7 @@ public abstract class Context implements AutoCloseable {
          * @param isTombstone == OBJ.TOMBSTONE or NOT
          */
 //        <K, V>
-        void accept(Class<? extends OBJ> c, Map<Object, OBJ> map, boolean isTombstone);
+        void accept(Class<? extends OBJ> c, Map<Object, OBJ> map, boolean isTombstone) throws IllegalAccessException;
 
     }
 }

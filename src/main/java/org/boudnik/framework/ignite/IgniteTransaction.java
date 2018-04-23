@@ -3,12 +3,15 @@ package org.boudnik.framework.ignite;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.binary.BinaryObject;
-import org.boudnik.framework.OBJ;
 import org.boudnik.framework.Context;
+import org.boudnik.framework.FieldsCache;
+import org.boudnik.framework.OBJ;
 
 import javax.cache.Cache;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author Alexandre_Boudnik
@@ -32,6 +35,19 @@ public class IgniteTransaction extends Context {
         org.apache.ignite.transactions.Transaction tx = ignite.transactions().tx();
         if (isTransactionExist())
             tx.rollback();
+    }
+
+    protected void doRollback(@SuppressWarnings("unused") Class<? extends OBJ> clazz, @SuppressWarnings("unused") Map<Object, OBJ> map, @SuppressWarnings("unused") boolean isTombstone) throws IllegalAccessException {
+        for (@SuppressWarnings("unused") Map.Entry<OBJ, BinaryObject> memento : mementos.entrySet()) {
+            BinaryObject binary = memento.getValue();
+            Object de = binary.deserialize();
+            for (Field field : FieldsCache.getInstance().getFields(de.getClass())) {
+                Object oldValue = field.get(de);
+                if (!Objects.equals(oldValue, field.get(memento.getKey()))) {
+                    field.set(memento.getKey(), oldValue);
+                }
+            }
+        }
     }
 
     @Override
@@ -73,18 +89,14 @@ public class IgniteTransaction extends Context {
         Map<Object, OBJ> map = getMap(clazz);
         V obj = (V) map.get(identity);
         if (obj == null) {
-            if (map.containsKey(identity))
+            BinaryObject binaryObject = igniteCache(clazz).<K, BinaryObject>withKeepBinary().get(identity);
+            if (binaryObject == null)
                 return null;
-            else {
-                BinaryObject binaryObject = igniteCache(clazz).<K, BinaryObject>withKeepBinary().get(identity);
-                if (binaryObject == null)
-                    return null;
-                V v = binaryObject.deserialize();
-                v.setKey(identity);
-                map.put(identity, v);
-                mementos.put(v, binaryObject);
-                return v;
-            }
+            V v = binaryObject.deserialize();
+            v.setKey(identity);
+            map.put(identity, v);
+            mementos.put(v, binaryObject);
+            return v;
         } else
             return obj;
     }

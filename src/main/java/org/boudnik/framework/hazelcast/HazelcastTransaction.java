@@ -4,14 +4,17 @@ import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.transaction.TransactionContext;
-import org.boudnik.framework.OBJ;
 import org.boudnik.framework.Context;
+import org.boudnik.framework.FieldsCache;
+import org.boudnik.framework.OBJ;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.spi.CachingProvider;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class HazelcastTransaction extends Context {
 
@@ -64,6 +67,17 @@ public class HazelcastTransaction extends Context {
         cache.putAll(map2Cache);
     }
 
+    protected void doRollback(@SuppressWarnings("unused") Class<? extends OBJ> clazz, @SuppressWarnings("unused") Map<Object, OBJ> map, @SuppressWarnings("unused") boolean isTombstone) throws IllegalAccessException {
+        for (@SuppressWarnings("unused") Map.Entry<OBJ, Object> memento : mementos.entrySet()) {
+            for (Field field : FieldsCache.getInstance().getFields(memento.getValue().getClass())) {
+                Object oldValue = field.get(memento.getValue());
+                if (!Objects.equals(oldValue, field.get(memento.getKey()))) {
+                    field.set(memento.getKey(), oldValue);
+                }
+            }
+        }
+    }
+
     protected void clear() {
         hazelcastTransactionContext = null;
         super.clear();
@@ -75,18 +89,17 @@ public class HazelcastTransaction extends Context {
         Map<Object, OBJ> map = getMap(clazz);
         V obj = (V) map.get(identity);
         if (obj == null) {
-            if (map.containsKey(identity))
+            Object object = cache(clazz).get(identity);
+            if (object == null)
                 return null;
-            else {
-                Object binaryObject = cache(clazz).get(identity);
-                if (binaryObject == null)
-                    return null;
-                V v = (V) binaryObject;
-                v.setKey(identity);
-                map.put(identity, v);
-                mementos.put(v, binaryObject);
-                return v;
-            }
+            V v = (V) object;
+            v.setKey(identity);
+            map.put(identity, v);
+                /*
+                A bit trick to get the equals but another object to ignore any changes on key object
+                 */
+            mementos.put(v, cache(clazz).get(identity));
+            return v;
         } else
             return obj;
     }
