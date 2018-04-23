@@ -1,21 +1,13 @@
 package org.boudnik.framework.test.testsuites;
 
-import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.ComplexTestEntry;
 import org.boudnik.framework.test.core.ComplexTestEntry2;
 import org.boudnik.framework.test.core.TestEntry;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-@RunWith(Parameterized.class)
 public class GetDeleteComplexEntryTest extends TransactionTest {
-
-    public GetDeleteComplexEntryTest(CacheProvider input) {
-        super(input, ComplexTestEntry2.class);
-    }
 
     @Test
     public void testGetDeleteCommitComplexTestEntry2() {

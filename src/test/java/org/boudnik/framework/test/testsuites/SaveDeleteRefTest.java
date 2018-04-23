@@ -1,6 +1,5 @@
 package org.boudnik.framework.test.testsuites;
 
-import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.RefTestEntry;
 import org.boudnik.framework.test.core.TestEntry;
@@ -8,13 +7,9 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class SaveDeleteRefTest extends TransactionTest {
+public class SaveDeleteRefTest extends TransactionTest  {
 
     private RefTestEntry ref;
-
-    public SaveDeleteRefTest(CacheProvider input) {
-        super(input, RefTestEntry.class, TestEntry.class);
-    }
 
     @Test
     public void testSaveDeleteCommit() {
@@ -28,7 +23,6 @@ public class SaveDeleteRefTest extends TransactionTest {
             TestEntry actual = tx.get(TestEntry.class, "CreateSaveDeleteCommitRef");
             actual.delete();
         });
-
 
         assertNull(tx.get(TestEntry.class, "CreateSaveDeleteCommitRef"));
         RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
@@ -47,12 +41,10 @@ public class SaveDeleteRefTest extends TransactionTest {
         actual.delete();
         tx.rollback();
 
-        tx.transaction(() -> {
-            TestEntry actualEntry = tx.get(TestEntry.class, "CreateSaveDeleteRollbackRef");
-            assertNotNull(actualEntry);
-            RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
-            assertNotNull(actualRef);
-            assertSame(actualRef.getEntry(), actualEntry);
-        });
+        TestEntry actualEntry = tx.get(TestEntry.class, "CreateSaveDeleteRollbackRef");
+        assertNotNull(actualEntry);
+        RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
+        assertNotNull(actualRef);
+        assertSame(actualRef.getEntry(), actualEntry);
     }
 }

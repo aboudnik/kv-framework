@@ -1,22 +1,12 @@
 package org.boudnik.framework.test;
 
-import org.apache.ignite.Ignition;
-import org.apache.ignite.configuration.IgniteConfiguration;
-import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Context;
-import org.boudnik.framework.TransactionFactory;
-import org.boudnik.framework.ignite.IgniteTransaction;
 import org.boudnik.framework.test.core.TestEntry;
+import org.boudnik.framework.test.testsuites.TransactionTest;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class ObjSaveTest {
-
-    @BeforeClass
-    public static void beforeAll() {
-        TransactionFactory.getOrCreateTransaction(CacheProvider.IGNITE, () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true).withCache(TestEntry.class);
-    }
+public class ObjSaveTest extends TransactionTest {
 
     @Test
     public void checkSeveralEntriesWithDifferentKeys() {

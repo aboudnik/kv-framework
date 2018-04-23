@@ -1,6 +1,5 @@
 package org.boudnik.framework.test.testsuites;
 
-import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.ComplexTestEntry;
 import org.boudnik.framework.test.core.ComplexTestEntry2;
@@ -8,10 +7,7 @@ import org.boudnik.framework.test.core.TestEntry;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class MultipleClassesWithSameKeyTest extends TransactionTest {
-    public MultipleClassesWithSameKeyTest(CacheProvider input) {
-        super(input, TestEntry.class, ComplexTestEntry2.class);
-    }
+public class MultipleClassesWithSameKeyTest extends TransactionTest  {
 
     @Test
     public void MultipleEntriesWithSameKey() {

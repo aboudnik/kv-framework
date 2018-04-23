@@ -1,6 +1,5 @@
 package org.boudnik.framework.test.testsuites;
 
-import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.ComplexRefTestEntry;
 import org.boudnik.framework.test.core.RefTestEntry;
@@ -10,11 +9,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
-public class SaveGetComplexRefTest extends TransactionTest {
-
-    public SaveGetComplexRefTest(CacheProvider input) {
-        super(input, ComplexRefTestEntry.class, RefTestEntry.class, TestEntry.class);
-    }
+public class SaveGetComplexRefTest extends TransactionTest  {
 
     @Test
     public void testSaveGetCommit() {
@@ -31,15 +26,13 @@ public class SaveGetComplexRefTest extends TransactionTest {
             assertSame(complexRef.getEntry(), ref);
         });
 
-        tx.transaction(() -> {
-            TestEntry actual = tx.get(TestEntry.class, "SaveGetCommitComplexRef");
-            TestEntry expected = ref.getEntry();
-            RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
-            ComplexRefTestEntry actualComplexRef = tx.get(ComplexRefTestEntry.class, complexRef.getKey());
-            assertSame(actual, expected);
-            assertSame(actualRef.getEntry(), ref.getEntry());
-            assertSame(actualComplexRef.getEntry().getEntry(), ref.getEntry());
-        });
+        TestEntry actual = tx.get(TestEntry.class, "SaveGetCommitComplexRef");
+        TestEntry expected = ref.getEntry();
+        RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
+        ComplexRefTestEntry actualComplexRef = tx.get(ComplexRefTestEntry.class, complexRef.getKey());
+        assertSame(actual, expected);
+        assertSame(actualRef.getEntry(), ref.getEntry());
+        assertSame(actualComplexRef.getEntry().getEntry(), ref.getEntry());
     }
 
     @Test

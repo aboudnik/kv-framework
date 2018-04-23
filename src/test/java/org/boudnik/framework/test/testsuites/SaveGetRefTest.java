@@ -1,6 +1,5 @@
 package org.boudnik.framework.test.testsuites;
 
-import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.RefTestEntry;
 import org.boudnik.framework.test.core.TestEntry;
@@ -9,11 +8,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
-public class SaveGetRefTest extends TransactionTest {
-
-    public SaveGetRefTest(CacheProvider input) {
-        super(input, RefTestEntry.class, TestEntry.class);
-    }
+public class SaveGetRefTest extends TransactionTest  {
 
     @Test
     public void testSaveGetCommit() {
@@ -27,13 +22,11 @@ public class SaveGetRefTest extends TransactionTest {
             assertSame(ref.getEntry(), entry);
         });
 
-        tx.transaction(() -> {
-            TestEntry actual = tx.get(TestEntry.class, "SaveGetCommitRef");
-            TestEntry expected = ref.getEntry();
-            assertSame(actual, expected);
-            RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
-            assertSame(actualRef.getEntry(), ref.getEntry());
-        });
+        TestEntry actual = tx.get(TestEntry.class, "SaveGetCommitRef");
+        TestEntry expected = ref.getEntry();
+        assertSame(actual, expected);
+        RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
+        assertSame(actualRef.getEntry(), ref.getEntry());
     }
 
     @Test

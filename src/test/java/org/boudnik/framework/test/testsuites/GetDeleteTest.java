@@ -1,16 +1,11 @@
 package org.boudnik.framework.test.testsuites;
 
-import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.MutableTestEntry;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class GetDeleteTest extends TransactionTest {
-
-    public GetDeleteTest(CacheProvider input) {
-        super(input, MutableTestEntry.class);
-    }
 
     @Test
     public void testGetDeleteCommit() {

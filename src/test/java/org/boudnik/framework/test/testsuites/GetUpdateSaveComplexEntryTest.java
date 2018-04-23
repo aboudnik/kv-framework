@@ -1,6 +1,5 @@
 package org.boudnik.framework.test.testsuites;
 
-import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.ComplexTestEntry;
 import org.boudnik.framework.test.core.ComplexTestEntry2;
@@ -11,10 +10,6 @@ import org.junit.Test;
 public class GetUpdateSaveComplexEntryTest extends TransactionTest {
 
     private static final String NEW_VALUE = "New Value";
-
-    public GetUpdateSaveComplexEntryTest(CacheProvider input) {
-        super(input, ComplexTestEntry2.class);
-    }
 
     @Test
     public void testGetUpdateSaveCommitComplexTestEntry() {

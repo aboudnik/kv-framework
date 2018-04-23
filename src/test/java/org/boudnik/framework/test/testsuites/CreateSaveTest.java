@@ -1,16 +1,11 @@
 package org.boudnik.framework.test.testsuites;
 
-import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.TestEntry;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class CreateSaveTest extends TransactionTest {
-
-    public CreateSaveTest(CacheProvider input) {
-        super(input, TestEntry.class);
-    }
 
     @Test
     public void testCreateSaveCommit() {

@@ -1,6 +1,5 @@
 package org.boudnik.framework.test.testsuites;
 
-import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.ComplexRefTestEntry;
 import org.boudnik.framework.test.core.RefTestEntry;
@@ -9,14 +8,10 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class SaveDeleteComplexRefTest extends TransactionTest {
+public class SaveDeleteComplexRefTest extends TransactionTest  {
 
     private RefTestEntry ref;
     private ComplexRefTestEntry complexRef;
-
-    public SaveDeleteComplexRefTest(CacheProvider input) {
-        super(input, ComplexRefTestEntry.class, RefTestEntry.class, TestEntry.class);
-    }
 
     @Test
     public void testSaveDeleteOBJCommit() {
@@ -32,14 +27,12 @@ public class SaveDeleteComplexRefTest extends TransactionTest {
             actual.delete();
         });
 
-        tx.transaction(() -> {
-            assertNull(tx.get(TestEntry.class, "CreateSaveDeleteOBJCommit"));
-            RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
-            ComplexRefTestEntry actualComplexRef = tx.get(ComplexRefTestEntry.class, complexRef.getKey());
-            assertNull(actualRef.getEntry());
-            assertNull(actualComplexRef.getEntry().getEntry());
-            assertSame(actualComplexRef.getEntry(), actualRef);
-        });
+        assertNull(tx.get(TestEntry.class, "CreateSaveDeleteOBJCommit"));
+        RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
+        ComplexRefTestEntry actualComplexRef = tx.get(ComplexRefTestEntry.class, complexRef.getKey());
+        assertNull(actualRef.getEntry());
+        assertNull(actualComplexRef.getEntry().getEntry());
+        assertSame(actualComplexRef.getEntry(), actualRef);
     }
 
     @Test
@@ -56,13 +49,11 @@ public class SaveDeleteComplexRefTest extends TransactionTest {
             actualRef.delete();
         });
 
-        tx.transaction(() -> {
-            assertNull(tx.get(RefTestEntry.class, ref.getKey()));
-            TestEntry actual = tx.get(TestEntry.class, "CreateSaveDeleteREFCommit");
-            assertSame(actual, ref.getEntry());
-            ComplexRefTestEntry actualComplexRef = tx.get(ComplexRefTestEntry.class, complexRef.getKey());
-            assertNull(actualComplexRef.getEntry());
-        });
+        assertNull(tx.get(RefTestEntry.class, ref.getKey()));
+        TestEntry actual = tx.get(TestEntry.class, "CreateSaveDeleteREFCommit");
+        assertSame(actual, ref.getEntry());
+        ComplexRefTestEntry actualComplexRef = tx.get(ComplexRefTestEntry.class, complexRef.getKey());
+        assertNull(actualComplexRef.getEntry());
     }
 
     @Test
@@ -78,15 +69,13 @@ public class SaveDeleteComplexRefTest extends TransactionTest {
         entryToBeDeleted.delete();
         tx.rollback();
 
-        tx.transaction(() -> {
-            TestEntry actualEntry = tx.get(TestEntry.class, "CreateSaveDeleteOBJRollback");
-            assertNotNull(actualEntry);
-            RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
-            ComplexRefTestEntry actualComplexRef = tx.get(ComplexRefTestEntry.class, complexRef.getKey());
-            assertSame(actualRef.getEntry(), actualEntry);
-            assertSame(actualComplexRef.getEntry().getEntry(), actualEntry);
-            assertSame(actualComplexRef.getEntry(), actualRef);
-        });
+        TestEntry actualEntry = tx.get(TestEntry.class, "CreateSaveDeleteOBJRollback");
+        assertNotNull(actualEntry);
+        RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
+        ComplexRefTestEntry actualComplexRef = tx.get(ComplexRefTestEntry.class, complexRef.getKey());
+        assertSame(actualRef.getEntry(), actualEntry);
+        assertSame(actualComplexRef.getEntry().getEntry(), actualEntry);
+        assertSame(actualComplexRef.getEntry(), actualRef);
     }
 
     @Test
@@ -102,14 +91,12 @@ public class SaveDeleteComplexRefTest extends TransactionTest {
         refToBeDeleted.delete();
         tx.rollback();
 
-        tx.transaction(() -> {
-            RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
-            assertNotNull(actualRef);
-            TestEntry actual = tx.get(TestEntry.class, "CreateSaveDeleteREFRollback");
-            assertSame(actual, actualRef.getEntry());
-            ComplexRefTestEntry actualComplexRef = tx.get(ComplexRefTestEntry.class, complexRef.getKey());
-            assertSame(actualComplexRef.getEntry(), actualRef);
-        });
+        RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
+        assertNotNull(actualRef);
+        TestEntry actual = tx.get(TestEntry.class, "CreateSaveDeleteREFRollback");
+        assertSame(actual, actualRef.getEntry());
+        ComplexRefTestEntry actualComplexRef = tx.get(ComplexRefTestEntry.class, complexRef.getKey());
+        assertSame(actualComplexRef.getEntry(), actualRef);
     }
 
 }
