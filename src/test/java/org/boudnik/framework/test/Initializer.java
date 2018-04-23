@@ -7,7 +7,6 @@ import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.TransactionFactory;
 import org.boudnik.framework.hazelcast.HazelcastTransaction;
 import org.boudnik.framework.ignite.IgniteTransaction;
-import org.boudnik.framework.pocs.Person;
 import org.boudnik.framework.test.core.*;
 
 public class Initializer {
