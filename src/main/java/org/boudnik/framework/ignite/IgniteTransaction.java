@@ -4,7 +4,6 @@ import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.binary.BinaryObject;
 import org.boudnik.framework.Context;
-import org.boudnik.framework.FieldsCache;
 import org.boudnik.framework.OBJ;
 
 import javax.cache.Cache;
@@ -19,7 +18,6 @@ import java.util.Objects;
  */
 public class IgniteTransaction extends Context {
 
-    private final Map<OBJ, BinaryObject> mementos = new HashMap<>();
     private final Ignite ignite;
 
     public IgniteTransaction(Ignite ignite) {
@@ -37,17 +35,9 @@ public class IgniteTransaction extends Context {
             tx.rollback();
     }
 
-    protected void doRollback(@SuppressWarnings("unused") Class<? extends OBJ> clazz, @SuppressWarnings("unused") Map<Object, OBJ> map, @SuppressWarnings("unused") boolean isTombstone) throws IllegalAccessException {
-        for (@SuppressWarnings("unused") Map.Entry<OBJ, BinaryObject> memento : mementos.entrySet()) {
-            BinaryObject binary = memento.getValue();
-            Object de = binary.deserialize();
-            for (Field field : FieldsCache.getInstance().getFields(de.getClass())) {
-                Object oldValue = field.get(de);
-                if (!Objects.equals(oldValue, field.get(memento.getKey()))) {
-                    field.set(memento.getKey(), oldValue);
-                }
-            }
-        }
+    @Override
+    protected Object getMementoValue(Map.Entry memento) {
+        return ((BinaryObject) memento.getValue()).deserialize();
     }
 
     @Override
@@ -73,8 +63,7 @@ public class IgniteTransaction extends Context {
         for (Map.Entry<Object, OBJ> entry : map.entrySet()) {
             OBJ obj = entry.getValue();
             BinaryObject current = ignite.binary().toBinary(obj);
-
-            BinaryObject memento = mementos.get(obj);
+            BinaryObject memento = (BinaryObject) mementos.get(obj);
             if (memento != null && !current.equals(memento)) {
                 obj.onCommit(current, memento);
             }

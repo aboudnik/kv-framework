@@ -4,8 +4,8 @@ import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.transaction.TransactionContext;
+import org.apache.ignite.binary.BinaryObject;
 import org.boudnik.framework.Context;
-import org.boudnik.framework.FieldsCache;
 import org.boudnik.framework.OBJ;
 
 import javax.cache.Cache;
@@ -19,7 +19,6 @@ import java.util.Objects;
 public class HazelcastTransaction extends Context {
 
     private TransactionContext hazelcastTransactionContext;
-    private final Map<OBJ, Object> mementos = new HashMap<>();
     private final CachingProvider cachingProvider;
     private final CacheConfig config;
     private final HazelcastInstance hc;
@@ -67,15 +66,9 @@ public class HazelcastTransaction extends Context {
         cache.putAll(map2Cache);
     }
 
-    protected void doRollback(@SuppressWarnings("unused") Class<? extends OBJ> clazz, @SuppressWarnings("unused") Map<Object, OBJ> map, @SuppressWarnings("unused") boolean isTombstone) throws IllegalAccessException {
-        for (@SuppressWarnings("unused") Map.Entry<OBJ, Object> memento : mementos.entrySet()) {
-            for (Field field : FieldsCache.getInstance().getFields(memento.getValue().getClass())) {
-                Object oldValue = field.get(memento.getValue());
-                if (!Objects.equals(oldValue, field.get(memento.getKey()))) {
-                    field.set(memento.getKey(), oldValue);
-                }
-            }
-        }
+    @Override
+    protected Object getMementoValue(Map.Entry memento) {
+        return memento.getValue();
     }
 
     protected void clear() {
