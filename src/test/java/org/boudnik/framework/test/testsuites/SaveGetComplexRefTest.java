@@ -1,19 +1,28 @@
 package org.boudnik.framework.test.testsuites;
 
+import org.apache.ignite.Ignition;
+import org.apache.ignite.configuration.IgniteConfiguration;
 import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Context;
+import org.boudnik.framework.TransactionFactory;
+import org.boudnik.framework.ignite.IgniteTransaction;
 import org.boudnik.framework.test.core.ComplexRefTestEntry;
 import org.boudnik.framework.test.core.RefTestEntry;
 import org.boudnik.framework.test.core.TestEntry;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
-public class SaveGetComplexRefTest extends TransactionTest {
+public class SaveGetComplexRefTest {
 
-    public SaveGetComplexRefTest(CacheProvider input) {
-        super(input, ComplexRefTestEntry.class, RefTestEntry.class, TestEntry.class);
+    @BeforeClass
+    public static void beforeAll() {
+        if (TransactionFactory.getCurrentTransaction() == null) {
+            TransactionFactory.getOrCreateTransaction(CacheProvider.IGNITE, () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true)
+                    .withCache(ComplexRefTestEntry.class, RefTestEntry.class, TestEntry.class);
+        }
     }
 
     @Test
@@ -31,15 +40,13 @@ public class SaveGetComplexRefTest extends TransactionTest {
             assertSame(complexRef.getEntry(), ref);
         });
 
-        tx.transaction(() -> {
-            TestEntry actual = tx.get(TestEntry.class, "SaveGetCommitComplexRef");
-            TestEntry expected = ref.getEntry();
-            RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
-            ComplexRefTestEntry actualComplexRef = tx.get(ComplexRefTestEntry.class, complexRef.getKey());
-            assertSame(actual, expected);
-            assertSame(actualRef.getEntry(), ref.getEntry());
-            assertSame(actualComplexRef.getEntry().getEntry(), ref.getEntry());
-        });
+        TestEntry actual = tx.get(TestEntry.class, "SaveGetCommitComplexRef");
+        TestEntry expected = ref.getEntry();
+        RefTestEntry actualRef = tx.get(RefTestEntry.class, ref.getKey());
+        ComplexRefTestEntry actualComplexRef = tx.get(ComplexRefTestEntry.class, complexRef.getKey());
+        assertSame(actual, expected);
+        assertSame(actualRef.getEntry(), ref.getEntry());
+        assertSame(actualComplexRef.getEntry().getEntry(), ref.getEntry());
     }
 
     @Test

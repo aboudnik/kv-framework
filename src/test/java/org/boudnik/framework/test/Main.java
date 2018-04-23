@@ -23,7 +23,8 @@ public class Main {
 
     @BeforeClass
     public static void beforeAll() {
-        TransactionFactory.getOrCreateTransaction(CacheProvider.IGNITE, () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true).withCache(TestEntry.class);
+        TransactionFactory.getOrCreateTransaction(CacheProvider.IGNITE, () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true)
+                .withCache(TestEntry.class);
     }
 
     @Test

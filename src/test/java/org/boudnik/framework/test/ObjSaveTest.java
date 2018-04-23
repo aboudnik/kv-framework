@@ -15,7 +15,10 @@ public class ObjSaveTest {
 
     @BeforeClass
     public static void beforeAll() {
-        TransactionFactory.getOrCreateTransaction(CacheProvider.IGNITE, () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true).withCache(TestEntry.class);
+        if (TransactionFactory.getCurrentTransaction() == null) {
+            TransactionFactory.getOrCreateTransaction(CacheProvider.IGNITE, () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true)
+                    .withCache(TestEntry.class);
+        }
     }
 
     @Test

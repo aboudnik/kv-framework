@@ -1,22 +1,28 @@
 package org.boudnik.framework.test.testsuites;
 
+import org.apache.ignite.Ignition;
+import org.apache.ignite.configuration.IgniteConfiguration;
 import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Context;
+import org.boudnik.framework.TransactionFactory;
+import org.boudnik.framework.ignite.IgniteTransaction;
 import org.boudnik.framework.test.core.ComplexTestEntry;
 import org.boudnik.framework.test.core.ComplexTestEntry2;
 import org.boudnik.framework.test.core.TestEntry;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-@RunWith(Parameterized.class)
-public class GetUpdateSaveDeleteComplexEntryTest extends TransactionTest {
+public class GetUpdateSaveDeleteComplexEntryTest {
 
     private static final String NEW_VALUE = "New Value";
 
-    public GetUpdateSaveDeleteComplexEntryTest(CacheProvider input) {
-        super(input, ComplexTestEntry2.class);
+    @BeforeClass
+    public static void beforeAll() {
+        if (TransactionFactory.getCurrentTransaction() == null) {
+            TransactionFactory.getOrCreateTransaction(CacheProvider.IGNITE, () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true)
+                    .withCache(ComplexTestEntry2.class);
+        }
     }
 
     @Test

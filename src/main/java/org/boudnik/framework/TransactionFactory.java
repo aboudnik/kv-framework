@@ -9,7 +9,7 @@ public class TransactionFactory {
     }
 
     @SuppressWarnings("unchecked")
-    static <T extends Context> T getCurrentTransaction() {
+    public static <T extends Context> T getCurrentTransaction() {
         return (T) TRANSACTION_THREAD_LOCAL.get();
     }
 
