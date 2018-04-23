@@ -1,9 +1,5 @@
 package org.boudnik.framework.test;
 
-import com.hazelcast.core.Hazelcast;
-import org.boudnik.framework.CacheProvider;
-import org.boudnik.framework.TransactionFactory;
-import org.boudnik.framework.hazelcast.HazelcastTransaction;
 import org.boudnik.framework.test.testsuites.*;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
@@ -32,6 +28,6 @@ public class HazelcastTransactionTestSuite {
 
     @BeforeClass
     public static void beforeAll() {
-        TransactionFactory.getOrCreateTransaction(CacheProvider.HAZELCAST, () -> new HazelcastTransaction(Hazelcast.newHazelcastInstance()), true);
+        Initializer.initHazelcast();
     }
 }
