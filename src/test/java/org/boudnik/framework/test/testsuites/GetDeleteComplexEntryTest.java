@@ -46,11 +46,13 @@ public class GetDeleteComplexEntryTest extends TransactionTest {
         ComplexTestEntry key = te.getKey();
         ComplexTestEntry2 entry = tx.get(ComplexTestEntry2.class, key);
         Assert.assertNotNull(entry);
-
-        tx.transaction(() -> {
-            entry.delete();
-            throw new RuntimeException("RollbackException");
-        });
-        Assert.assertNotNull(tx.getAndClose(ComplexTestEntry2.class, key));
+        try {
+            tx.transaction(() -> {
+                entry.delete();
+                throw new RuntimeException("Rollback Exception");
+            });
+        } finally {
+            Assert.assertNotNull(tx.getAndClose(ComplexTestEntry2.class, key));
+        }
     }
 }

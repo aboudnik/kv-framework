@@ -53,15 +53,17 @@ public class GetUpdateSaveDeleteTest extends TransactionTest {
         final MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteRollback");
         Assert.assertNotNull(entry);
         Assert.assertNull(entry.getValue());
-
-        tx.transaction(() -> {
-            entry.setValue(NEW_VALUE);
-            entry.save();
-            entry.delete();
-            throw new RuntimeException("Rollback Exception");
-        });
-        MutableTestEntry updatedEntry = tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteRollback");
-        Assert.assertNotNull(updatedEntry);
-        Assert.assertNull(updatedEntry.getValue());
+        try {
+            tx.transaction(() -> {
+                entry.setValue(NEW_VALUE);
+                entry.save();
+                entry.delete();
+                throw new RuntimeException("Rollback Exception");
+            });
+        } finally {
+            MutableTestEntry updatedEntry = tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteRollback");
+            Assert.assertNotNull(updatedEntry);
+            Assert.assertNull(updatedEntry.getValue());
+        }
     }
 }

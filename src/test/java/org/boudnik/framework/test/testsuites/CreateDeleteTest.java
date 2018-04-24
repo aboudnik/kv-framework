@@ -32,12 +32,15 @@ public class CreateDeleteTest extends TransactionTest {
     @Test(expected = RuntimeException.class)
     public void testCreateDeleteRollbackViaException() {
         Context tx = Context.instance();
-        tx.transaction(() -> {
-            TestEntry te = new TestEntry("testCreateDeleteRollback");
-            te.save();
-            te.delete();
-            throw new RuntimeException("Rollback Exception");
-        });
-        Assert.assertNull(tx.getAndClose(TestEntry.class, "testCreateDeleteRollback"));
+        try {
+            tx.transaction(() -> {
+                TestEntry te = new TestEntry("testCreateDeleteRollback");
+                te.save();
+                te.delete();
+                throw new RuntimeException("Rollback Exception");
+            });
+        } finally {
+            Assert.assertNull(tx.getAndClose(TestEntry.class, "testCreateDeleteRollback"));
+        }
     }
 }

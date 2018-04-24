@@ -23,6 +23,7 @@ import org.junit.runners.Suite;
         SaveGetComplexRefTest.class,
         SaveGetRefTest.class,
         ObjSaveTest.class,
+        NullSaveTest.class,
 })
 public class HazelcastTransactionTestSuite {
 

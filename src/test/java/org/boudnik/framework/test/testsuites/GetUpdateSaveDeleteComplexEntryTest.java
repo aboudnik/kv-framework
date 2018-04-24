@@ -66,16 +66,18 @@ public class GetUpdateSaveDeleteComplexEntryTest extends TransactionTest {
         ComplexTestEntry key = te.getKey();
         ComplexTestEntry2 entry = tx.get(ComplexTestEntry2.class, key);
         Assert.assertNotNull(entry);
-
-        tx.transaction(() -> {
-            entry.setValue(NEW_VALUE);
-            entry.getKey().setValue(NEW_VALUE);
-            entry.save();
-            entry.delete();
-            throw new RuntimeException("Rollback Exception");
-        });
-        ComplexTestEntry2 notUpdatedEntry = tx.getAndClose(ComplexTestEntry2.class, key);
-        Assert.assertNull(notUpdatedEntry.getKey().getValue());
-        Assert.assertNull(notUpdatedEntry.getValue());
+        try {
+            tx.transaction(() -> {
+                entry.setValue(NEW_VALUE);
+                entry.getKey().setValue(NEW_VALUE);
+                entry.save();
+                entry.delete();
+                throw new RuntimeException("Rollback Exception");
+            });
+        } finally {
+            ComplexTestEntry2 notUpdatedEntry = tx.getAndClose(ComplexTestEntry2.class, key);
+            Assert.assertNull(notUpdatedEntry.getKey().getValue());
+            Assert.assertNull(notUpdatedEntry.getValue());
+        }
     }
 }

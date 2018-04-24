@@ -40,11 +40,13 @@ public class CreateSaveDeleteTest extends TransactionTest {
 
         TestEntry entry = tx.get(TestEntry.class, "testCommitDeleteRollback");
         Assert.assertNotNull(entry);
-
-        tx.transaction(() -> {
-            entry.delete();
-            throw new RuntimeException("RollbackException");
-        });
-        Assert.assertNotNull(tx.getAndClose(TestEntry.class, "testCommitDeleteRollback"));
+        try {
+            tx.transaction(() -> {
+                entry.delete();
+                throw new RuntimeException("Rollback Exception");
+            });
+        } finally {
+            Assert.assertNotNull(tx.getAndClose(TestEntry.class, "testCommitDeleteRollback"));
+        }
     }
 }
