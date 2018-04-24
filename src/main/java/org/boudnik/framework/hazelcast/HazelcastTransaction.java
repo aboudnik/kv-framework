@@ -109,12 +109,6 @@ public class HazelcastTransaction extends Context {
         return (T) cache;
     }
 
-    @Override
-    public void close() {
-        if (isTransactionExist())
-            rollback();
-    }
-
     public HazelcastTransaction tx() {
         hazelcastTransactionContext = hc.newTransactionContext();
         hazelcastTransactionContext.beginTransaction();

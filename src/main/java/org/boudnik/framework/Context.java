@@ -33,6 +33,7 @@ public abstract class Context implements AutoCloseable {
                 }
             }
         }
+        engineSpecificRollbackAction();
     }
 
     protected abstract Object getMementoValue(Map.Entry memento);
@@ -77,10 +78,8 @@ public abstract class Context implements AutoCloseable {
     public void rollback() {
         try {
             doRollback();
-//            walk(this::doRollback);
-            engineSpecificRollbackAction();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
         } finally {
             clear();
         }
