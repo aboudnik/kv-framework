@@ -4,17 +4,14 @@ import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.transaction.TransactionContext;
-import org.apache.ignite.binary.BinaryObject;
 import org.boudnik.framework.Context;
 import org.boudnik.framework.OBJ;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.spi.CachingProvider;
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class HazelcastTransaction extends Context {
 

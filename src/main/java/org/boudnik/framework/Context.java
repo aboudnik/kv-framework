@@ -1,9 +1,9 @@
 package org.boudnik.framework;
 
-import org.apache.ignite.binary.BinaryObject;
 import org.jetbrains.annotations.NotNull;
 
 import javax.cache.Cache;
+import java.beans.Introspector;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashMap;
@@ -23,9 +23,11 @@ public abstract class Context implements AutoCloseable {
     protected abstract void doPut(Class<? extends OBJ> clazz, Map<Object, OBJ> map);
 
     private void doRollback() throws IllegalAccessException {
+//        Introspector.getBeanInfo(Bean.class);
         for (Map.Entry<OBJ, Object> memento : mementos.entrySet()) {
             Object value = getMementoValue(memento);
             OBJ key = memento.getKey();
+
             for (Field field : value.getClass().getDeclaredFields()) {
                 Object oldValue = field.get(value);
                 if (!Objects.equals(oldValue, field.get(key))) {
@@ -149,7 +151,7 @@ public abstract class Context implements AutoCloseable {
         return OBJ.TOMBSTONE == reference;
     }
 
-    public static <T extends Context> T instance() {
+    public static Context instance() {
         return TransactionFactory.getCurrentTransaction();
     }
 
