@@ -1,4 +1,4 @@
-package org.boudnik.framework;
+package org.boudnik.framework.util;
 
 import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;

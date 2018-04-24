@@ -34,6 +34,10 @@ public class IgniteTransaction extends Context {
     }
 
     @Override
+    protected void engineSpecificClearAction() {
+    }
+
+    @Override
     protected Object getMementoValue(Map.Entry memento) {
         return ((BinaryObject) memento.getValue()).deserialize();
     }
@@ -48,11 +52,6 @@ public class IgniteTransaction extends Context {
             ignite.getOrCreateCache(clazz.getName());
         }
         return this;
-    }
-
-    protected void clear() {
-        super.clear();
-        mementos.clear();
     }
 
     protected void doPut(Class<? extends OBJ> clazz, Map<Object, OBJ> map) {

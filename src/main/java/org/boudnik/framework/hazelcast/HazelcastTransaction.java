@@ -68,10 +68,9 @@ public class HazelcastTransaction extends Context {
         return memento.getValue();
     }
 
-    protected void clear() {
+    @Override
+    protected void engineSpecificClearAction() {
         hazelcastTransactionContext = null;
-        super.clear();
-        mementos.clear();
     }
 
     @SuppressWarnings("unchecked")

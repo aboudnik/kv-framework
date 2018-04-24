@@ -1,14 +1,16 @@
 package org.boudnik.framework;
 
+import org.boudnik.framework.util.Beans;
 import org.jetbrains.annotations.NotNull;
 
 import javax.cache.Cache;
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
 import java.beans.Introspector;
-import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * @author Alexandre_Boudnik
@@ -17,26 +19,11 @@ import java.util.Objects;
 public abstract class Context implements AutoCloseable {
     private final Map<Class<? extends OBJ>, Map<Object, OBJ>> scope = new HashMap<>();
     protected final Map<OBJ, Object> mementos = new HashMap<>();
+    private Map<Class, BeanInfo> meta = new HashMap<>();
 
     public abstract <K, V extends OBJ> V get(Class<V> clazz, K identity);
 
     protected abstract void doPut(Class<? extends OBJ> clazz, Map<Object, OBJ> map);
-
-    private void doRollback() throws IllegalAccessException {
-//        Introspector.getBeanInfo(Bean.class);
-        for (Map.Entry<OBJ, Object> memento : mementos.entrySet()) {
-            Object value = getMementoValue(memento);
-            OBJ key = memento.getKey();
-
-            for (Field field : value.getClass().getDeclaredFields()) {
-                Object oldValue = field.get(value);
-                if (!Objects.equals(oldValue, field.get(key))) {
-                    field.set(key, oldValue);
-                }
-            }
-        }
-        engineSpecificRollbackAction();
-    }
 
     protected abstract Object getMementoValue(Map.Entry memento);
 
@@ -47,6 +34,8 @@ public abstract class Context implements AutoCloseable {
     protected abstract void engineSpecificCommitAction();
 
     protected abstract void engineSpecificRollbackAction();
+
+    protected abstract void engineSpecificClearAction();
 
     protected abstract <T extends Cache> T cache(Class<? extends OBJ> clazz);
 
@@ -79,8 +68,16 @@ public abstract class Context implements AutoCloseable {
 
     public void rollback() {
         try {
-            doRollback();
-        } catch (IllegalAccessException e) {
+            for (Map.Entry<OBJ, Object> memento : mementos.entrySet()) {
+                Object value = getMementoValue(memento);
+                OBJ key = memento.getKey();
+                BeanInfo info = meta.get(value.getClass());
+                if (info == null)
+                    meta.put(value.getClass(), info = Introspector.getBeanInfo(value.getClass()));
+                Beans.set(info, value, key);
+            }
+            engineSpecificRollbackAction();
+        } catch (IllegalAccessException | InvocationTargetException | IntrospectionException e) {
             throw new RuntimeException(e);
         } finally {
             clear();
@@ -130,8 +127,10 @@ public abstract class Context implements AutoCloseable {
         return tombstoneNotTombstoneMap;
     }
 
-    protected void clear() {
+    private void clear() {
+        engineSpecificClearAction();
         scope.clear();
+        mementos.clear();
     }
 
     @SuppressWarnings("unchecked")

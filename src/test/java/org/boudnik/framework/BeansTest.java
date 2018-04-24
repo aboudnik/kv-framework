@@ -1,5 +1,6 @@
 package org.boudnik.framework;
 
+import org.boudnik.framework.util.Beans;
 import org.junit.Before;
 import org.junit.Test;
 
