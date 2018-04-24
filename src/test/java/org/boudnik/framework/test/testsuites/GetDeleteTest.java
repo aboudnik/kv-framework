@@ -39,11 +39,13 @@ public class GetDeleteTest extends TransactionTest {
 
         MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetDeleteRollback");
         Assert.assertNotNull(entry);
-        tx.transaction(() -> {
-            entry.delete();
-            throw new RuntimeException("Rollback Exception");
-        });
-
-        Assert.assertNotNull(tx.get(MutableTestEntry.class, "testGetDeleteRollback"));
+        try {
+            tx.transaction(() -> {
+                entry.delete();
+                throw new RuntimeException("Rollback Exception");
+            });
+        } finally {
+            Assert.assertNotNull(tx.get(MutableTestEntry.class, "testGetDeleteRollback"));
+        }
     }
 }

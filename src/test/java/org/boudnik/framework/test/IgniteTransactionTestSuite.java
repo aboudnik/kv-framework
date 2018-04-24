@@ -24,6 +24,7 @@ import org.junit.runners.Suite;
         SaveGetRefTest.class,
         Main.class,
         ObjSaveTest.class,
+        NullSaveTest.class,
 })
 public class IgniteTransactionTestSuite {
 
