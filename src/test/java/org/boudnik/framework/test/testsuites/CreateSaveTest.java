@@ -26,10 +26,13 @@ public class CreateSaveTest extends TransactionTest {
     @Test(expected = RuntimeException.class)
     public void testCreateSaveRollbackViaException() {
         Context tx = Context.instance();
-        tx.transaction(() -> {
-            new TestEntry("testCreateSaveRollback").save();
-            throw new RuntimeException("Rollback Exception");
-        });
-        Assert.assertNull(tx.getAndClose(TestEntry.class, "testCreateSaveRollback"));
+        try {
+            tx.transaction(() -> {
+                new TestEntry("testCreateSaveRollback").save();
+                throw new RuntimeException("Rollback Exception");
+            });
+        } finally {
+            Assert.assertNull(tx.getAndClose(TestEntry.class, "testCreateSaveRollback"));
+        }
     }
 }
