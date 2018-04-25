@@ -14,7 +14,7 @@
     <artifactId>kv-tests</artifactId>
 
     <properties>
-        <ignite-core.version>2.4.0</ignite-core.version>
+        <junit-toolbox.version>2.4</junit-toolbox.version>
     </properties>
 
     <dependencies>
@@ -36,7 +36,7 @@
         <dependency>
             <groupId>com.googlecode.junit-toolbox</groupId>
             <artifactId>junit-toolbox</artifactId>
-            <version>2.4</version>
+            <version>${junit-toolbox.version}</version>
         </dependency>
     </dependencies>
 
