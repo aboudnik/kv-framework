@@ -47,25 +47,8 @@ public class HazelcastTransaction extends Context {
     }
 
     @Override
-    protected void doPut(Class<? extends OBJ> clazz, Map<Object, OBJ> map) {
-        Cache<Object, Object> cache = cache(clazz);
-        Map<Object, Object> map2Cache = new HashMap<>();
-        for (Map.Entry<Object, OBJ> entry : map.entrySet()) {
-            OBJ obj = entry.getValue();
-
-            Object memento = mementos.get(obj);
-            if (memento != null && !obj.equals(memento)) {
-                obj.onCommit(obj, memento);
-            }
-            map2Cache.put(entry.getKey(), obj);
-        }
-
-        cache.putAll(map2Cache);
-    }
-
-    @Override
-    protected Object getMementoValue(Map.Entry memento) {
-        return memento.getValue();
+    protected OBJ<Object> getMementoValue(Map.Entry<Object, Object> memento) {
+        return (OBJ<Object>) memento.getValue();
     }
 
     @Override

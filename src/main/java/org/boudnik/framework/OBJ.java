@@ -45,9 +45,6 @@ public interface OBJ<K> extends Serializable {
 
     }
 
-    OBJ<Object> TOMBSTONE = new OBJ<Object>() {
-    };
-
     abstract class Implementation<K> implements OBJ<K> {
 
 
@@ -120,13 +117,14 @@ public interface OBJ<K> extends Serializable {
          * @return cached {@link OBJ.REF#reference}
          */
         public V get() {
+            Context context = Context.instance();
             if (reference == null)
-                return identity == null ? null : (reference = Context.instance().get(clazz, identity));
-            V inScope = Context.instance().get(clazz, reference.getKey());
-            if (Context.isDeleted(inScope))
+                return identity == null ? null : (reference = context.get(clazz, identity));
+            V inScope = context.get(clazz, reference.getKey());
+            if (context.isDeleted(inScope))
                 return null;
             if (inScope != reference)
-                return reference = Context.instance().get(clazz, identity);
+                return reference = context.get(clazz, identity);
             return reference;
         }
 
