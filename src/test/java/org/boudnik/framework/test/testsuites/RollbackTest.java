@@ -27,12 +27,11 @@ public class RollbackTest extends TransactionTest {
             context.transaction(() -> {
                 person = context.get(Person.class, SSN);
                 person.fname = "Lisa";
-                person.save(); //todo: redundant call
                 throw new RuntimeException();
             });
         } catch (RuntimeException ignored) {
         } finally {
-            assertEquals("John", person.fname);
+            assertEquals("John", context.get(Person.class, SSN).fname);
         }
     }
 
