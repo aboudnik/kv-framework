@@ -21,6 +21,7 @@
         <module>kv-core</module>
         <module>kv-ignite</module>
         <module>kv-hazelcast</module>
+        <module>kv-tests</module>
     </modules>
 
     <dependencies>
@@ -29,6 +30,19 @@
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.hazelcast</groupId>
+            <artifactId>hazelcast</artifactId>
+            <version>RELEASE</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ignite</groupId>
+            <artifactId>ignite-core</artifactId>
+            <version>2.4.0</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>

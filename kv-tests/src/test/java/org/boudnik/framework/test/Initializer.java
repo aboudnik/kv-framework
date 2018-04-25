@@ -3,7 +3,6 @@ package org.boudnik.framework.test;
 import com.hazelcast.core.Hazelcast;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
-import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.TransactionFactory;
 import org.boudnik.framework.hazelcast.HazelcastTransaction;
 import org.boudnik.framework.ignite.IgniteTransaction;
@@ -13,11 +12,11 @@ public class Initializer {
     private static final Class[] classes = {ComplexRefTestEntry.class, ComplexTestEntry.class, ComplexTestEntry2.class, MutableTestEntry.class, RefTestEntry.class, TestEntry.class, Person.class};
 
     public static void initIgnite() {
-        TransactionFactory.getOrCreateTransaction(CacheProvider.IGNITE, () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true)
+        TransactionFactory.getOrCreateTransaction(IgniteTransaction.class, () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true)
                 .withCache(classes);
     }
 
     public static void initHazelcast() {
-        TransactionFactory.getOrCreateTransaction(CacheProvider.HAZELCAST, () -> new HazelcastTransaction(Hazelcast.newHazelcastInstance()), true);
+        TransactionFactory.getOrCreateTransaction(HazelcastTransaction.class, () -> new HazelcastTransaction(Hazelcast.newHazelcastInstance()), true);
     }
 }
