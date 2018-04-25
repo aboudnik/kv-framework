@@ -1,11 +1,13 @@
 package org.boudnik.framework;
 
+import org.boudnik.framework.util.Beans;
 import org.jetbrains.annotations.NotNull;
 
 import javax.cache.Cache;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 
 /**
  * @author Alexandre_Boudnik
@@ -13,12 +15,13 @@ import java.util.Map;
  */
 public abstract class Context implements AutoCloseable {
     private final Map<Class<? extends OBJ>, Map<Object, OBJ>> scope = new HashMap<>();
+    private final Set<OBJ> deleted = new HashSet<>();
+    private Map<Class, BeanInfo> meta = new HashMap<>();
+    protected final Map<Object, Object> mementos = new HashMap<>();
 
     public abstract <K, V extends OBJ> V get(Class<V> clazz, K identity);
 
-    protected abstract void doPut(Class<? extends OBJ> clazz, Map<Object, OBJ> map);
-
-    protected abstract void doRollback(@SuppressWarnings("unused") Class<? extends OBJ> clazz, @SuppressWarnings("unused") Map<Object, OBJ> map, @SuppressWarnings("unused") boolean isTombstone) throws IllegalAccessException;
+    protected abstract OBJ<Object> getMementoValue(Map.Entry<Object, Object> memento);
 
     protected abstract void startTransactionIfNotStarted();
 
@@ -28,6 +31,8 @@ public abstract class Context implements AutoCloseable {
 
     protected abstract void engineSpecificRollbackAction();
 
+    protected abstract void engineSpecificClearAction();
+
     protected abstract <T extends Cache> T cache(Class<? extends OBJ> clazz);
 
     public OBJ save(OBJ obj) {
@@ -35,14 +40,16 @@ public abstract class Context implements AutoCloseable {
     }
 
     public OBJ save(OBJ obj, Object key) {
-        if(key == null)
+        if (key == null)
             throw new NullPointerException();
         getMap(obj.getClass()).put(key, obj);
         return obj;
     }
 
     public void delete(OBJ obj) {
-        getMap(obj.getClass()).put(obj.getKey(), OBJ.TOMBSTONE);
+        OBJ removed = getMap(obj.getClass()).remove(obj.getKey());
+        if (removed != null)
+            deleted.add(removed);
     }
 
     @SuppressWarnings("unchecked")
@@ -59,10 +66,15 @@ public abstract class Context implements AutoCloseable {
 
     public void rollback() {
         try {
-            walk(this::doRollback);
+            for (Map.Entry<Object, Object> memento : mementos.entrySet()) {
+                OBJ src = getMementoValue(memento);
+                Object dst = getMap(src.getClass()).get(memento.getKey());
+                if (dst != null)
+                    Beans.set(meta, src, dst);
+            }
             engineSpecificRollbackAction();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IllegalAccessException | InvocationTargetException | IntrospectionException e) {
+            throw new RuntimeException(e);
         } finally {
             clear();
         }
@@ -70,49 +82,27 @@ public abstract class Context implements AutoCloseable {
 
     private void commit() {
         try {
-            walk(this::doCommit);
+            for (Map.Entry<Class<? extends OBJ>, Map<Object, OBJ>> byClass : scope.entrySet()) {
+                cache(byClass.getKey()).putAll(byClass.getValue());
+            }
+            for (OBJ obj : deleted) {
+                cache(obj.getClass()).remove(obj.getKey());
+            }
             engineSpecificCommitAction();
-        } catch (Exception e) {
-            e.printStackTrace();
         } finally {
             clear();
         }
-    }
-
-    private void doCommit(Class<? extends OBJ> clazz, Map<Object, OBJ> map, boolean isTombstone) {
-        if (isTombstone) {
-            doRemove(clazz, map);
-        } else {
-            doPut(clazz, map);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private void doRemove(Class<? extends OBJ> clazz, Map<Object, OBJ> map) {
-        //   map.keySet().forEach(cache(clazz)::remove);
-        cache(clazz).removeAll(map.keySet());
     }
 
     public Context transaction(OBJ obj) {
         return transaction(obj::save);
     }
 
-    @NotNull
-    private Map<Boolean, Map<Object, OBJ>> getTombstoneNotTombstoneMap(Map.Entry<Class<? extends OBJ>, Map<Object, OBJ>> byClass) {
-        Map<Object, OBJ> map;
-        if ((map = byClass.getValue()).isEmpty()) return Collections.emptyMap();
-        Map<Boolean, Map<Object, OBJ>> tombstoneNotTombstoneMap = new HashMap<>(2);
-
-        for (Map.Entry<Object, OBJ> entry : map.entrySet()) {
-            tombstoneNotTombstoneMap
-                    .computeIfAbsent(entry.getValue() == OBJ.TOMBSTONE, k -> new HashMap<>())
-                    .put(entry.getKey(), entry.getValue());
-        }
-        return tombstoneNotTombstoneMap;
-    }
-
-    protected void clear() {
+    private void clear() {
+        engineSpecificClearAction();
         scope.clear();
+        mementos.clear();
+        deleted.clear();
     }
 
     @SuppressWarnings("unchecked")
@@ -128,11 +118,11 @@ public abstract class Context implements AutoCloseable {
         return (T) this;
     }
 
-    static <K, V extends OBJ<K>> boolean isDeleted(V reference) {
-        return OBJ.TOMBSTONE == reference;
+    <K, V extends OBJ<K>> boolean isDeleted(V reference) {
+        return deleted.contains(reference);
     }
 
-    public static <T extends Context> T instance() {
+    public static Context instance() {
         return TransactionFactory.getCurrentTransaction();
     }
 
@@ -148,24 +138,13 @@ public abstract class Context implements AutoCloseable {
         return value;
     }
 
-    private void walk(Worker worker) throws IllegalAccessException {
-        for (Map.Entry<Class<? extends OBJ>, Map<Object, OBJ>> byClass : scope.entrySet()) {
-
-            Map<Boolean, Map<Object, OBJ>> tombstoneNotTombstoneMap = getTombstoneNotTombstoneMap(byClass);
-            for (Map.Entry<Boolean, Map<Object, OBJ>> tombstoneTypePartitionEntry : tombstoneNotTombstoneMap.entrySet()) {
-                worker.accept(byClass.getKey(), tombstoneTypePartitionEntry.getValue(), tombstoneTypePartitionEntry.getKey());
-            }
-        }
-    }
-
     @FunctionalInterface
     protected interface Worker {
         /**
          * Performs this operation on the given arguments.
          *
-         * @param c           class
-         * @param map         (key -> value)
-         * @param isTombstone == OBJ.TOMBSTONE or NOT
+         * @param c   class
+         * @param map (key -> value)
          */
 //        <K, V>
         void accept(Class<? extends OBJ> c, Map<Object, OBJ> map, boolean isTombstone) throws IllegalAccessException;

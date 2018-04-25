@@ -4,14 +4,10 @@ import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.binary.BinaryObject;
 import org.boudnik.framework.Context;
-import org.boudnik.framework.FieldsCache;
 import org.boudnik.framework.OBJ;
 
 import javax.cache.Cache;
-import java.lang.reflect.Field;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * @author Alexandre_Boudnik
@@ -19,7 +15,6 @@ import java.util.Objects;
  */
 public class IgniteTransaction extends Context {
 
-    private final Map<OBJ, BinaryObject> mementos = new HashMap<>();
     private final Ignite ignite;
 
     public IgniteTransaction(Ignite ignite) {
@@ -37,17 +32,15 @@ public class IgniteTransaction extends Context {
             tx.rollback();
     }
 
-    protected void doRollback(@SuppressWarnings("unused") Class<? extends OBJ> clazz, @SuppressWarnings("unused") Map<Object, OBJ> map, @SuppressWarnings("unused") boolean isTombstone) throws IllegalAccessException {
-        for (@SuppressWarnings("unused") Map.Entry<OBJ, BinaryObject> memento : mementos.entrySet()) {
-            BinaryObject binary = memento.getValue();
-            Object de = binary.deserialize();
-            for (Field field : FieldsCache.getInstance().getFields(de.getClass())) {
-                Object oldValue = field.get(de);
-                if (!Objects.equals(oldValue, field.get(memento.getKey()))) {
-                    field.set(memento.getKey(), oldValue);
-                }
-            }
-        }
+    @Override
+    protected void engineSpecificClearAction() {
+    }
+
+    @Override
+    protected OBJ<Object> getMementoValue(Map.Entry<Object, Object> memento) {
+        OBJ<Object> src = ((BinaryObject) memento.getValue()).deserialize();
+        src.setKey(memento.getKey());
+        return src;
     }
 
     @Override
@@ -62,28 +55,6 @@ public class IgniteTransaction extends Context {
         return this;
     }
 
-    protected void clear() {
-        super.clear();
-        mementos.clear();
-    }
-
-    protected void doPut(Class<? extends OBJ> clazz, Map<Object, OBJ> map) {
-        IgniteCache<Object, BinaryObject> cache = cache(clazz);
-        Map<Object, BinaryObject> map2Cache = new HashMap<>();
-        for (Map.Entry<Object, OBJ> entry : map.entrySet()) {
-            OBJ obj = entry.getValue();
-            BinaryObject current = ignite.binary().toBinary(obj);
-
-            BinaryObject memento = mementos.get(obj);
-            if (memento != null && !current.equals(memento)) {
-                obj.onCommit(current, memento);
-            }
-            map2Cache.put(entry.getKey(), current);
-        }
-
-        cache.putAll(map2Cache);
-    }
-
     @SuppressWarnings("unchecked")
     public <K, V extends OBJ> V get(Class<V> clazz, K identity) {
         Map<Object, OBJ> map = getMap(clazz);
@@ -95,7 +66,7 @@ public class IgniteTransaction extends Context {
             V v = binaryObject.deserialize();
             v.setKey(identity);
             map.put(identity, v);
-            mementos.put(v, binaryObject);
+            mementos.put(identity, binaryObject);
             return v;
         } else
             return obj;

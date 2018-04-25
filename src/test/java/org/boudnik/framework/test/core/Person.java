@@ -1,4 +1,4 @@
-package org.boudnik.framework.pocs;
+package org.boudnik.framework.test.core;
 
 import org.boudnik.framework.OBJ;
 
@@ -16,10 +16,27 @@ public class Person extends OBJ.Implementation<String> {
         this.lname = lname;
     }
 
+    public String getFname() {
+        return fname;
+    }
+
+    public void setFname(String fname) {
+        this.fname = fname;
+    }
+
+    public String getLname() {
+        return lname;
+    }
+
+    public void setLname(String lname) {
+        this.lname = lname;
+    }
+
     @Override
     public String toString() {
         return "Person{" +
-                "fname='" + fname + '\'' +
+                "ssn='" + getKey() + '\'' +
+                ", fname='" + fname + '\'' +
                 ", lname='" + lname + '\'' +
                 '}';
     }

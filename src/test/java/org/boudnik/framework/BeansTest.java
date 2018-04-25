@@ -1,5 +1,6 @@
-package org.boudnik.framework.pocs;
+package org.boudnik.framework;
 
+import org.boudnik.framework.util.Beans;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -15,7 +16,7 @@ import static org.junit.Assert.assertFalse;
  * @author Alexandre_Boudnik
  * @since 04/10/18 12:46
  */
-public class IntrospectorTest {
+public class BeansTest {
 
     private BeanInfo beanInfo;
 
@@ -46,23 +47,23 @@ public class IntrospectorTest {
 
     @Test
     public void same() throws InvocationTargetException, IllegalAccessException {
-        assertTrue(org.boudnik.framework.Introspector.isEquals(beanInfo, b1, b3));
+        assertTrue(Beans.isEquals(beanInfo, b1, b3));
     }
 
     @Test
     public void reflection() throws InvocationTargetException, IllegalAccessException {
-        assertTrue(org.boudnik.framework.Introspector.isEquals(beanInfo, b1, b1));
+        assertTrue(Beans.isEquals(beanInfo, b1, b1));
     }
 
     @Test
     public void different() throws InvocationTargetException, IllegalAccessException {
-        assertFalse(org.boudnik.framework.Introspector.isEquals(beanInfo, b1, b2));
+        assertFalse(Beans.isEquals(beanInfo, b1, b2));
     }
 
     @Test
     public void set() throws InvocationTargetException, IllegalAccessException {
-        org.boudnik.framework.Introspector.set(beanInfo, b1, b2);
-        assertTrue(org.boudnik.framework.Introspector.isEquals(beanInfo, b1, b2));
+        Beans.set(beanInfo, b1, b2);
+        assertTrue(Beans.isEquals(beanInfo, b1, b2));
     }
 
 }

@@ -1,10 +1,11 @@
 package org.boudnik.framework.test.testsuites;
 
 import org.boudnik.framework.Context;
-import org.boudnik.framework.pocs.Person;
+import org.boudnik.framework.test.core.Person;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Sergey Nuyanzin
@@ -15,7 +16,7 @@ public class RollbackTest extends TransactionTest {
     private static final String SSN = "601-77-1234";
     private Person person;
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testCreateSaveUpdateRollback() {
 
         Context context = Context.instance();
@@ -26,19 +27,20 @@ public class RollbackTest extends TransactionTest {
             context.transaction(() -> {
                 person = context.get(Person.class, SSN);
                 person.fname = "Lisa";
-                person.save();
+                person.save(); //todo: redundant call
                 throw new RuntimeException();
             });
+        } catch (RuntimeException ignored) {
         } finally {
             assertEquals("John", person.fname);
         }
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testCreateSaveDeleteRollback() {
 
         Context context = Context.instance();
-        person = new Person(SSN, "John", "Doe");
+        person = new Person(SSN, "James", "Doe");
         context.transaction(() -> person.save());
 
         try {
@@ -47,8 +49,9 @@ public class RollbackTest extends TransactionTest {
                 person.delete();
                 throw new RuntimeException();
             });
+        } catch (RuntimeException ignored) {
         } finally {
-            assertEquals("John", person.fname);
+            context.transaction(() -> assertNotNull(context.get(Person.class, SSN)));
         }
     }
 }

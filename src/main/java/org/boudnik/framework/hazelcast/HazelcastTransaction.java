@@ -5,21 +5,17 @@ import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.transaction.TransactionContext;
 import org.boudnik.framework.Context;
-import org.boudnik.framework.FieldsCache;
 import org.boudnik.framework.OBJ;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.spi.CachingProvider;
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class HazelcastTransaction extends Context {
 
     private TransactionContext hazelcastTransactionContext;
-    private final Map<OBJ, Object> mementos = new HashMap<>();
     private final CachingProvider cachingProvider;
     private final CacheConfig config;
     private final HazelcastInstance hc;
@@ -51,37 +47,13 @@ public class HazelcastTransaction extends Context {
     }
 
     @Override
-    protected void doPut(Class<? extends OBJ> clazz, Map<Object, OBJ> map) {
-        Cache<Object, Object> cache = cache(clazz);
-        Map<Object, Object> map2Cache = new HashMap<>();
-        for (Map.Entry<Object, OBJ> entry : map.entrySet()) {
-            OBJ obj = entry.getValue();
-
-            Object memento = mementos.get(obj);
-            if (memento != null && !obj.equals(memento)) {
-                obj.onCommit(obj, memento);
-            }
-            map2Cache.put(entry.getKey(), obj);
-        }
-
-        cache.putAll(map2Cache);
+    protected OBJ<Object> getMementoValue(Map.Entry<Object, Object> memento) {
+        return (OBJ<Object>) memento.getValue();
     }
 
-    protected void doRollback(@SuppressWarnings("unused") Class<? extends OBJ> clazz, @SuppressWarnings("unused") Map<Object, OBJ> map, @SuppressWarnings("unused") boolean isTombstone) throws IllegalAccessException {
-        for (@SuppressWarnings("unused") Map.Entry<OBJ, Object> memento : mementos.entrySet()) {
-            for (Field field : FieldsCache.getInstance().getFields(memento.getValue().getClass())) {
-                Object oldValue = field.get(memento.getValue());
-                if (!Objects.equals(oldValue, field.get(memento.getKey()))) {
-                    field.set(memento.getKey(), oldValue);
-                }
-            }
-        }
-    }
-
-    protected void clear() {
+    @Override
+    protected void engineSpecificClearAction() {
         hazelcastTransactionContext = null;
-        super.clear();
-        mementos.clear();
     }
 
     @SuppressWarnings("unchecked")
@@ -114,12 +86,6 @@ public class HazelcastTransaction extends Context {
                 : cache;
 
         return (T) cache;
-    }
-
-    @Override
-    public void close() {
-        if (isTransactionExist())
-            rollback();
     }
 
     public HazelcastTransaction tx() {
