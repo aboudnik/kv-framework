@@ -13,17 +13,17 @@ public class TransactionFactory {
         return (T) TRANSACTION_THREAD_LOCAL.get();
     }
 
-    public static <T extends Context> T getOrCreateTransaction(CacheProvider cacheProvider, Supplier<T> supplier) {
-        return getOrCreateTransaction(cacheProvider, supplier, false);
+    public static <T extends Context> T getOrCreateTransaction(Class<T> transactionClass, Supplier<T> supplier) {
+        return getOrCreateTransaction(transactionClass, supplier, false);
     }
 
     @SuppressWarnings("unchecked")
-    public static <T extends Context> T getOrCreateTransaction(CacheProvider cacheProvider, Supplier<T> supplier, boolean abortCurrentIfAnotherProviderPresent) {
+    public static <T extends Context> T getOrCreateTransaction(Class<T> transactionClass, Supplier<T> supplier, boolean abortCurrentIfAnotherProviderPresent) {
         if (supplier == null)
             throw new NullPointerException();
         Context context = TRANSACTION_THREAD_LOCAL.get();
         if (context != null) {
-            if (context.getClass().isAssignableFrom(cacheProvider.getTransactionClass())) return (T) context;
+            if (context.getClass().isAssignableFrom(transactionClass)) return (T) context;
             else if (!abortCurrentIfAnotherProviderPresent) {
                 throw new RuntimeException("Another provider transaction is present " + context);
             } else {

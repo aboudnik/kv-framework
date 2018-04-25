@@ -1,7 +1,5 @@
 package org.boudnik.framework;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.io.Serializable;
 import java.util.NoSuchElementException;
 
@@ -15,7 +13,7 @@ public interface OBJ<K> extends Serializable {
         throw new NoSuchElementException("getKey");
     }
 
-    default void setKey(@NotNull K key) {
+    default void setKey(K key) {
 //        throw new NoSuchElementException("setKey");
     }
 
@@ -60,7 +58,7 @@ public interface OBJ<K> extends Serializable {
         }
 
         @Override
-        public void setKey(@NotNull K key) {
+        public void setKey(K key) {
             this.key = key;
         }
 
