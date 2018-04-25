@@ -38,6 +38,11 @@
             <artifactId>hazelcast-client</artifactId>
             <version>${hazelcast.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.googlecode.junit-toolbox</groupId>
+            <artifactId>junit-toolbox</artifactId>
+            <version>2.4</version>
+        </dependency>
     </dependencies>
 
     <build>
