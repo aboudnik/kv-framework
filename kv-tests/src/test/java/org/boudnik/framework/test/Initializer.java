@@ -8,6 +8,7 @@ import org.boudnik.framework.h2.H2Transaction;
 import org.boudnik.framework.hazelcast.HazelcastTransaction;
 import org.boudnik.framework.ignite.IgniteTransaction;
 import org.boudnik.framework.test.core.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.sql.*;
 import java.util.Arrays;
@@ -29,35 +30,29 @@ public class Initializer {
     public static void initH2() {
         try {
             Class.forName("org.h2.Driver");
-            final Connection conn = DriverManager.getConnection(
-                    "jdbc:h2:tcp://localhost:1521/default",
-                    "",
-                    ""
-            );
-
-            final Statement statement = conn.createStatement();
+            Connection connection =
+                    DriverManager.getConnection("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", "", "");
+            Statement statement = connection.createStatement();
             Arrays.stream(classes).forEach(aClass -> {
                 try {
-                    statement.addBatch(
-                            "CREATE TABLE IF NOT EXISTS " + aClass.getSimpleName() + " (" +
-                                    "  key BLOB, " +
-                                    "  value BLOB " +
-                                    ");");
+                    statement.addBatch(createTable(aClass));
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException(e);
                 }
             });
-
             statement.executeBatch();
-
-            TransactionFactory.getOrCreateTransaction(
-                    H2Transaction.class,
-                    () -> new H2Transaction(conn),
-                    true);
-
+            TransactionFactory.getOrCreateTransaction(H2Transaction.class, () -> new H2Transaction(connection), true);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
 
+    @NotNull
+    private static String createTable(Class aClass) {
+        return "CREATE TABLE IF NOT EXISTS " + aClass.getSimpleName() +
+                " (" +
+                "  key BLOB, " +
+                "  value BLOB " +
+                ");";
     }
 }
