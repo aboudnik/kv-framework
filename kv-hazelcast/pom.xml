@@ -12,6 +12,7 @@
     </parent>
 
     <artifactId>kv-hazelcast</artifactId>
+    <version>${kv.version}</version>
 
     <properties>
         <hazelcast.version>3.9.3</hazelcast.version>

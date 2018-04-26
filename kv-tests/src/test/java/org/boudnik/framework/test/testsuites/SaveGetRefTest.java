@@ -8,7 +8,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
-public class SaveGetRefTest extends TransactionTest  {
+public class SaveGetRefTest extends TransactionTest {
 
     @Test
     public void testSaveGetCommit() {

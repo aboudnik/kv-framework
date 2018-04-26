@@ -74,7 +74,7 @@ public class GetUpdateSaveDeleteComplexEntryTest extends TransactionTest {
                 entry.delete();
                 throw new RuntimeException("Rollback Exception");
             });
-        } catch (RuntimeException ignored){
+        } catch (RuntimeException ignored) {
         } finally {
             ComplexTestEntry2 notUpdatedEntry = tx.getAndClose(ComplexTestEntry2.class, key);
             Assert.assertNull(notUpdatedEntry.getKey().getValue());

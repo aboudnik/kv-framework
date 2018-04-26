@@ -9,7 +9,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
-public class SaveGetComplexRefTest extends TransactionTest  {
+public class SaveGetComplexRefTest extends TransactionTest {
 
     @Test
     public void testSaveGetCommit() {

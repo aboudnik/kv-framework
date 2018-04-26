@@ -12,6 +12,7 @@
     </parent>
 
     <artifactId>kv-tests</artifactId>
+    <version>${kv.version}</version>
 
     <properties>
         <junit-toolbox.version>2.4</junit-toolbox.version>

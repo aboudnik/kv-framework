@@ -12,6 +12,7 @@
     </parent>
 
     <artifactId>kv-ignite</artifactId>
+    <version>${kv.version}</version>
 
     <properties>
         <ignite-core.version>2.4.0</ignite-core.version>
