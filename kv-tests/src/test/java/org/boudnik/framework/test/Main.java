@@ -50,7 +50,7 @@ public class Main {
 
         try {
             executor.awaitTermination(2, TimeUnit.SECONDS);
-            Assert.assertNotNull(Context.instance().get(TestEntry.class, ""));
+            Assert.assertNotNull(Context.instance().get(TestEntry.class, "http://localhost/1"));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
