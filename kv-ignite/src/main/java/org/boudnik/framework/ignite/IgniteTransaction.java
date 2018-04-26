@@ -78,7 +78,7 @@ public class IgniteTransaction extends Context {
 
     @Override
     @SuppressWarnings("unchecked")
-    protected <T extends Cache> T cache(Class<? extends OBJ> clazz) {
+    protected <K, V, T extends Cache<K, V>> T cache(Class<? extends OBJ> clazz) {
         return (T) igniteCache(clazz);
     }
 
