@@ -10,7 +10,6 @@ import org.boudnik.framework.OBJ;
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.spi.CachingProvider;
-import java.util.HashMap;
 import java.util.Map;
 
 public class HazelcastTransaction extends Context {
