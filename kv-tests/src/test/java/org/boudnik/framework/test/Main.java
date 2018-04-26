@@ -2,7 +2,6 @@ package org.boudnik.framework.test;
 
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
-import org.boudnik.framework.CacheProvider;
 import org.boudnik.framework.Context;
 import org.boudnik.framework.TransactionFactory;
 import org.boudnik.framework.ignite.IgniteTransaction;
@@ -23,7 +22,7 @@ public class Main {
 
     @BeforeClass
     public static void beforeAll() {
-        TransactionFactory.getOrCreateTransaction(CacheProvider.IGNITE, () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true)
+        TransactionFactory.getOrCreateTransaction(IgniteTransaction.class, () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true)
                 .withCache(TestEntry.class);
     }
 
@@ -39,7 +38,7 @@ public class Main {
         for (int i = 0; i < 2; i++) {
             executor.submit(() -> {
                 try {
-                    Context tx = TransactionFactory.getOrCreateTransaction(CacheProvider.IGNITE, () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true).withCache(TestEntry.class);
+                    Context tx = TransactionFactory.getOrCreateTransaction(IgniteTransaction.class, () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true).withCache(TestEntry.class);
                     tx.transaction(() -> new TestEntry("http://localhost/1").save(""));
                 } catch (Exception e) {
                     e.printStackTrace();

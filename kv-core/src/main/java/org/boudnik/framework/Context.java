@@ -1,13 +1,15 @@
 package org.boudnik.framework;
 
 import org.boudnik.framework.util.Beans;
-import org.jetbrains.annotations.NotNull;
 
 import javax.cache.Cache;
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Alexandre_Boudnik
@@ -59,7 +61,6 @@ public abstract class Context implements AutoCloseable {
         cache(obj.getClass()).remove(obj.getKey());
     }
 
-    @NotNull
     protected Map<Object, OBJ> getMap(Class<? extends OBJ> clazz) {
         return scope.computeIfAbsent(clazz, k -> new HashMap<>());
     }
