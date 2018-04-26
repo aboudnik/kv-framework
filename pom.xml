@@ -21,6 +21,7 @@
         <module>kv-core</module>
         <module>kv-ignite</module>
         <module>kv-hazelcast</module>
+        <module>kv-h2</module>
         <module>kv-tests</module>
     </modules>
 
