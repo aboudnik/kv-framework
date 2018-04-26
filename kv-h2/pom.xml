@@ -11,6 +11,10 @@
         <relativePath>..</relativePath>
     </parent>
 
+    <properties>
+        <h2.version>1.4.197</h2.version>
+    </properties>
+
     <artifactId>kv-h2</artifactId>
 
     <dependencies>
@@ -22,7 +26,7 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <version>1.4.197</version>
+            <version>${h2.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
