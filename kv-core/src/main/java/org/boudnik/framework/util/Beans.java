@@ -1,7 +1,5 @@
 package org.boudnik.framework.util;
 
-import org.boudnik.framework.OBJ;
-
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -10,8 +8,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Objects;
-
-import static java.beans.Introspector.getBeanInfo;
 
 /**
  * Utility class
