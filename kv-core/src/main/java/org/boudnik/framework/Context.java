@@ -35,7 +35,7 @@ public abstract class Context implements AutoCloseable {
 
     protected abstract void engineSpecificClearAction();
 
-    protected abstract <T extends Cache> T cache(Class<? extends OBJ> clazz);
+    protected abstract <K, V, T extends Cache<K, V>> T cache(Class<? extends OBJ> clazz);
 
     public OBJ save(OBJ obj) {
         return save(obj, obj.getKey());

@@ -10,7 +10,6 @@ import org.boudnik.framework.OBJ;
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.spi.CachingProvider;
-import java.util.HashMap;
 import java.util.Map;
 
 public class HazelcastTransaction extends Context {
@@ -78,7 +77,7 @@ public class HazelcastTransaction extends Context {
 
     @Override
     @SuppressWarnings("unchecked")
-    protected <T extends Cache> T cache(Class<? extends OBJ> clazz) {
+    protected <K, V, T extends Cache<K, V>> T cache(Class<? extends OBJ> clazz) {
         CacheManager cacheManager = cachingProvider.getCacheManager();
 
         Cache cache = ((cache = cacheManager.getCache(clazz.getName())) == null)
