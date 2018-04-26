@@ -29,14 +29,14 @@ public class H2Transaction extends Context {
                 preparedStatement.setObject(1, identity, Types.JAVA_OBJECT);
                 ResultSet resultSet = preparedStatement.executeQuery();
                 if (resultSet.next()) {
-                    Blob blob = resultSet.getBlob(1);
-                    InputStream binaryStream = blob.getBinaryStream();
-                    ObjectInputStream ois = new ObjectInputStream(binaryStream);
-                    V v = (V) ois.readObject();
-                    v.setKey(identity);
-                    map.put(identity, v);
-                    mementos.put(identity, blob);
-                    return v;
+                    try (InputStream binaryStream = resultSet.getBinaryStream(1);
+                         ObjectInputStream ois = new ObjectInputStream(binaryStream)) {
+                        V v = (V) ois.readObject();
+                        v.setKey(identity);
+                        map.put(identity, v);
+                        // TODO: 26.04.18 put copy of object from db to memento
+                        return v;
+                    }
                 } else {
                     return null;
                 }
