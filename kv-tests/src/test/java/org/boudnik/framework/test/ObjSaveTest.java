@@ -11,14 +11,9 @@ public class ObjSaveTest extends TransactionTest {
     @Test
     public void checkSeveralEntriesWithDifferentKeys() {
         Context tx = Context.instance();
-        tx.transaction(() -> {
-            new TestEntry("http://localhost/1").save("checkSeveralEntriesWithDifferentKeys");
-            new TestEntry("http://localhost/1").save();
-        });
+        tx.transaction(() -> new TestEntry("http://localhost/1").save());
 
         TestEntry entry = tx.get(TestEntry.class, "http://localhost/1");
-        Assert.assertNotNull(entry);
-        entry = tx.get(TestEntry.class, "checkSeveralEntriesWithDifferentKeys");
         Assert.assertNotNull(entry);
     }
 }

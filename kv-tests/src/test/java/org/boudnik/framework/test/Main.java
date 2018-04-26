@@ -22,14 +22,15 @@ public class Main {
 
     @BeforeClass
     public static void beforeAll() {
-        TransactionFactory.getOrCreateTransaction(IgniteTransaction.class, () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true)
+        TransactionFactory.getOrCreateTransaction(IgniteTransaction.class,
+                () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true)
                 .withCache(TestEntry.class);
     }
 
     @Test
     public void main() {
         Context tx = Context.instance();
-        tx.transaction(() -> new TestEntry("http://localhost/1").save(""));
+        tx.transaction(() -> new TestEntry("http://localhost/1").save());
     }
 
     @Test
@@ -38,8 +39,9 @@ public class Main {
         for (int i = 0; i < 2; i++) {
             executor.submit(() -> {
                 try {
-                    Context tx = TransactionFactory.getOrCreateTransaction(IgniteTransaction.class, () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true).withCache(TestEntry.class);
-                    tx.transaction(() -> new TestEntry("http://localhost/1").save(""));
+                    Context tx = TransactionFactory.getOrCreateTransaction(IgniteTransaction.class,
+                            () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true).withCache(TestEntry.class);
+                    tx.transaction(() -> new TestEntry("http://localhost/1").save());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

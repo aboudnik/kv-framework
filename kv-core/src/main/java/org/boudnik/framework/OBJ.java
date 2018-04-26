@@ -22,11 +22,6 @@ public interface OBJ<K> extends Serializable {
         return (T) Context.instance().save(this);
     }
 
-    @SuppressWarnings("unchecked")
-    default <T> T save(K key) {
-        return (T) Context.instance().save(this, key);
-    }
-
     default void delete() {
         Context.instance().delete(this);
     }

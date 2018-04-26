@@ -1,6 +1,5 @@
 package org.boudnik.framework.test.testsuites;
 
-import com.sun.org.omg.CORBA.Initializer;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.boudnik.framework.TransactionFactory;
