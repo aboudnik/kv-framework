@@ -7,6 +7,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
+import java.util.Set;
 
 class H2Cache<K, V> extends H2AbstractCache<K, V> {
 
@@ -32,6 +33,19 @@ class H2Cache<K, V> extends H2AbstractCache<K, V> {
             }
             putPs.executeBatch();
         } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void removeAll(Set<? extends K> keys) {
+        try {
+            for (K key : keys) {
+                removePs.setObject(1, key, Types.JAVA_OBJECT);
+                removePs.addBatch();
+            }
+            removePs.executeBatch();
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
