@@ -5,16 +5,14 @@ import org.boudnik.framework.test.core.ArrayTestEntry;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class CreateSaveArrayTest extends TransactionTest{
+public class SaveGetArrayTest extends TransactionTest {
 
     @Test
     public void testCreateSaveCommit() {
         Context tx = Context.instance();
-        ArrayTestEntry arrayTestEntry1 = new ArrayTestEntry("testCreateSaveArrayCommit3", "testCreateSaveArrayCommit4").save();
-        Assert.assertNotNull(tx.get(ArrayTestEntry.class, arrayTestEntry1.getKey())); // <- works fine
-//        ArrayTestEntry arrayTestEntry = new ArrayTestEntry("testCreateSaveArrayCommit1", "testCreateSaveArrayCommit2");
-//        tx.transaction(arrayTestEntry);
-//        Assert.assertNotNull(tx.get(ArrayTestEntry.class, arrayTestEntry.getKey())); // <- fails
+        ArrayTestEntry arrayTestEntry = new ArrayTestEntry("testCreateSaveArrayCommit1", "testCreateSaveArrayCommit2");
+        tx.transaction(arrayTestEntry);
+        Assert.assertNotNull(tx.get(ArrayTestEntry.class, arrayTestEntry.getKey())); // <- fails
     }
 
     @Test
