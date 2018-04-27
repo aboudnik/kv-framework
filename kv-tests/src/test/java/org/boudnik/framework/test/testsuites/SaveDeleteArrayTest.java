@@ -4,8 +4,7 @@ import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.ArrayTestEntry;
 import org.junit.Test;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 public class SaveDeleteArrayTest extends TransactionTest {
 
@@ -27,6 +26,7 @@ public class SaveDeleteArrayTest extends TransactionTest {
     public void testSaveDeleteRollback() {
         Context tx = Context.instance();
         ArrayTestEntry arrayTestEntry = new ArrayTestEntry("CreateSaveDeleteCommitArray1");
+        arrayTestEntry.setUrl(new int[]{1, 2, 3, 4, 5});
         tx.transaction(arrayTestEntry);
 
 
@@ -36,6 +36,7 @@ public class SaveDeleteArrayTest extends TransactionTest {
 
         ArrayTestEntry actualEntry = tx.get(ArrayTestEntry.class, arrayTestEntry.getKey());
         assertNotNull(actualEntry);
+        assertArrayEquals(arrayTestEntry.getUrl(), actual.getUrl());
     }
 }
 

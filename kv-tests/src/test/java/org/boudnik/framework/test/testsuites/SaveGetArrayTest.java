@@ -11,8 +11,11 @@ public class SaveGetArrayTest extends TransactionTest {
     public void testCreateSaveCommit() {
         Context tx = Context.instance();
         ArrayTestEntry arrayTestEntry = new ArrayTestEntry("testCreateSaveArrayCommit1");
+        arrayTestEntry.setUrl(new int[]{1, 2, 3, 4, 5});
         tx.transaction(arrayTestEntry);
-        Assert.assertNotNull(tx.get(ArrayTestEntry.class, arrayTestEntry.getKey()));
+        ArrayTestEntry actual = tx.get(ArrayTestEntry.class, arrayTestEntry.getKey());
+        Assert.assertNotNull(actual);
+        Assert.assertArrayEquals(arrayTestEntry.getUrl(), actual.getUrl());
     }
 
     @Test
