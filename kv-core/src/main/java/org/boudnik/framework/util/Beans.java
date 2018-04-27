@@ -35,12 +35,7 @@ public class Beans {
     }
 
     public static void set(Map<Class, BeanInfo> meta, Object src, Object dst) throws IllegalAccessException, InvocationTargetException, IntrospectionException {
-        for (PropertyDescriptor descriptor : getBeanInfo(meta, src.getClass()).getPropertyDescriptors()) {
-            Method get = descriptor.getReadMethod();
-            Method set = descriptor.getWriteMethod();
-            if (set != null)
-                set.invoke(dst, get.invoke(src));
-        }
+        set(getBeanInfo(meta, src.getClass()), src, dst);
     }
 
     private static BeanInfo getBeanInfo(Map<Class, BeanInfo> meta, Class clazz) throws IntrospectionException {
@@ -50,6 +45,7 @@ public class Beans {
         return info;
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> T clone(Map<Class, BeanInfo> meta, T src) throws IntrospectionException, IllegalAccessException, InstantiationException, InvocationTargetException {
         Object copy = src.getClass().newInstance();
         set(meta, src, copy);
