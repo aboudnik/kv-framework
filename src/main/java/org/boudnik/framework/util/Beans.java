@@ -53,4 +53,10 @@ public class Beans {
             meta.put(clazz, info = Introspector.getBeanInfo(clazz));
         return info;
     }
+
+    public static <T> T clone(Map<Class, BeanInfo> meta, T src) throws IntrospectionException, IllegalAccessException, InstantiationException, InvocationTargetException {
+        Object copy = src.getClass().newInstance();
+        set(meta, src, copy);
+        return (T) copy;
+    }
 }

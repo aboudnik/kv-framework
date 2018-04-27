@@ -3,8 +3,12 @@ package org.boudnik.framework.test.core;
 import org.boudnik.framework.OBJ;
 
 public class ComplexTestEntry2 implements OBJ<OBJ<OBJ<String>>>  {
-    private final ComplexTestEntry url;
+    private ComplexTestEntry url;
     private String value;
+
+    public ComplexTestEntry2() {
+    }
+
     public ComplexTestEntry2(ComplexTestEntry url) {
         this.url = url;
     }

@@ -3,9 +3,12 @@ package org.boudnik.framework.test.core;
 import org.boudnik.framework.OBJ;
 
 public class MutableTestEntry implements OBJ<String> {
-    private final String url;
+    private String url;
 
     private String value;
+
+    public MutableTestEntry() {
+    }
 
     public MutableTestEntry(String url) {
         this.url = url;
