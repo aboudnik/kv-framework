@@ -10,6 +10,9 @@ public class Person extends OBJ.Implementation<String> {
     public String fname;
     public String lname;
 
+    public Person() {
+    }
+
     public Person(String ssn, String fname, String lname) {
         super(ssn);
         this.fname = fname;

@@ -40,8 +40,10 @@ public interface OBJ<K> extends Serializable {
 
     abstract class Implementation<K> implements OBJ<K> {
 
-
         private transient K key;
+
+        public Implementation() {
+        }
 
         protected Implementation(K key) {
             this.key = key;

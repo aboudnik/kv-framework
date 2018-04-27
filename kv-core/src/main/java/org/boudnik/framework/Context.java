@@ -18,7 +18,7 @@ import java.util.Set;
 public abstract class Context implements AutoCloseable {
     private final Map<Class<? extends OBJ>, Map<Object, OBJ>> scope = new HashMap<>();
     private final Set<OBJ> deleted = new HashSet<>();
-    private Map<Class, BeanInfo> meta = new HashMap<>();
+    protected Map<Class, BeanInfo> meta = new HashMap<>();
     protected final Map<Object, Object> mementos = new HashMap<>();
 
     public abstract <K, V extends OBJ> V get(Class<V> clazz, K identity);

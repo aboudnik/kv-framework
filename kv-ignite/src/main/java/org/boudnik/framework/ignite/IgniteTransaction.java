@@ -37,15 +37,15 @@ public class IgniteTransaction extends Context {
     }
 
     @Override
+    protected boolean isTransactionExist() {
+        return ignite.transactions().tx() != null;
+    }
+
+    @Override
     protected OBJ<Object> getMementoValue(Map.Entry<Object, Object> memento) {
         OBJ<Object> src = ((BinaryObject) memento.getValue()).deserialize();
         src.setKey(memento.getKey());
         return src;
-    }
-
-    @Override
-    protected boolean isTransactionExist() {
-        return ignite.transactions().tx() != null;
     }
 
     public IgniteTransaction withCache(Class... classes) {

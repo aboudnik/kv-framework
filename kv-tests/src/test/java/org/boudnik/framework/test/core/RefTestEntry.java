@@ -5,6 +5,9 @@ import org.boudnik.framework.OBJ;
 public class RefTestEntry extends OBJ.Implementation<String> {
     private final REF<String, TestEntry> ref = new REF<>(TestEntry.class);
 
+    public RefTestEntry() {
+    }
+
     private RefTestEntry(String key) {
         super(key);
     }

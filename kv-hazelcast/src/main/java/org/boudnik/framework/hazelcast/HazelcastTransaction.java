@@ -6,10 +6,13 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.transaction.TransactionContext;
 import org.boudnik.framework.Context;
 import org.boudnik.framework.OBJ;
+import org.boudnik.framework.util.Beans;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.spi.CachingProvider;
+import java.beans.IntrospectionException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
 public class HazelcastTransaction extends Context {
@@ -41,6 +44,11 @@ public class HazelcastTransaction extends Context {
     }
 
     @Override
+    protected void engineSpecificClearAction() {
+        hazelcastTransactionContext = null;
+    }
+
+    @Override
     protected boolean isTransactionExist() {
         return hazelcastTransactionContext != null;
     }
@@ -48,11 +56,6 @@ public class HazelcastTransaction extends Context {
     @Override
     protected OBJ<Object> getMementoValue(Map.Entry<Object, Object> memento) {
         return (OBJ<Object>) memento.getValue();
-    }
-
-    @Override
-    protected void engineSpecificClearAction() {
-        hazelcastTransactionContext = null;
     }
 
     @SuppressWarnings("unchecked")
@@ -63,14 +66,15 @@ public class HazelcastTransaction extends Context {
             Object object = cache(clazz).get(identity);
             if (object == null)
                 return null;
-            V v = (V) object;
-            v.setKey(identity);
-            map.put(identity, v);
-                /*
-                A bit trick to get the equals but another object to ignore any changes on key object
-                 */
-            mementos.put(v, cache(clazz).get(identity));
-            return v;
+            try {
+                V v = (V) object;
+                v.setKey(identity);
+                map.put(identity, v);
+                mementos.put(identity, Beans.clone(meta, v));
+                return v;
+            } catch (IntrospectionException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
+                throw new RuntimeException(e);
+            }
         } else
             return obj;
     }

@@ -1,6 +1,7 @@
 package org.boudnik.framework.test.core;
 
 import org.boudnik.framework.OBJ;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
@@ -11,6 +12,9 @@ import java.util.Objects;
 public class TestEntry implements OBJ<String> {
     private String url;
 
+    public TestEntry() {
+    }
+
     public TestEntry(String url) {
         this.url = url;
     }
@@ -18,6 +22,11 @@ public class TestEntry implements OBJ<String> {
     @Override
     public String getKey() {
         return url;
+    }
+
+    @Override
+    public void setKey(@NotNull String url) {
+        this.url = url;
     }
 
     @Override
