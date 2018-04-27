@@ -9,7 +9,7 @@ import org.junit.BeforeClass;
 
 public class TransactionTest {
 
-    private static final Class[] classes = {ComplexRefTestEntry.class, ComplexTestEntry.class, ComplexTestEntry2.class, MutableTestEntry.class, RefTestEntry.class, TestEntry.class, Person.class};
+    private static final Class[] classes = {ComplexRefTestEntry.class, ComplexTestEntry.class, ComplexTestEntry2.class, MutableTestEntry.class, RefTestEntry.class, TestEntry.class, Person.class, ArrayTestEntry.class};
     @BeforeClass
     public static void beforeAll() {
         if (TransactionFactory.getCurrentTransaction() == null) {

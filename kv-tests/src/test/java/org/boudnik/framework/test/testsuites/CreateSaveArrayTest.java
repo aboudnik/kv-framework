@@ -21,7 +21,6 @@ public class CreateSaveArrayTest extends TransactionTest{
     public void testCreateSaveRollback() {
         Context tx = Context.instance();
         ArrayTestEntry arrayTestEntry = new ArrayTestEntry("testCreateSaveArrayRollback1", "testCreateSaveArrayRollback2").save();
-//        arrayTestEntry
         Assert.assertNotNull(arrayTestEntry);
         tx.rollback();
         Assert.assertNull(tx.get(ArrayTestEntry.class, arrayTestEntry.getKey()));
