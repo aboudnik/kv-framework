@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Alexandre_Boudnik
@@ -18,7 +19,7 @@ import java.util.Set;
 public abstract class Context implements AutoCloseable {
     private final Map<Class<? extends OBJ>, Map<Object, OBJ>> scope = new HashMap<>();
     private final Set<OBJ> deleted = new HashSet<>();
-    protected Map<Class, BeanInfo> meta = new HashMap<>();
+    protected final Map<Class, BeanInfo> meta = new HashMap<>();
     protected final Map<Object, Object> mementos = new HashMap<>();
 
     public abstract <K, V extends OBJ> V get(Class<V> clazz, K identity);
@@ -86,8 +87,10 @@ public abstract class Context implements AutoCloseable {
             for (Map.Entry<Class<? extends OBJ>, Map<Object, OBJ>> byClass : scope.entrySet()) {
                 cache(byClass.getKey()).putAll(byClass.getValue());
             }
-            for (OBJ obj : deleted) {
-                cache(obj.getClass()).remove(obj.getKey());
+            for (Map.Entry<? extends Class<? extends OBJ>, Set<Object>> entry :
+                    deleted.stream().collect(Collectors.groupingBy(OBJ::getClass, Collectors.mapping(OBJ::getKey, Collectors.toSet()))).entrySet())
+            {
+                cache(entry.getKey()).removeAll(entry.getValue());
             }
             engineSpecificCommitAction();
         } finally {
