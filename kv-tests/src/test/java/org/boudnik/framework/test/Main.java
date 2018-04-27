@@ -41,7 +41,7 @@ public class Main {
                 try {
                     Context tx = TransactionFactory.getOrCreateTransaction(IgniteTransaction.class,
                             () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true).withCache(TestEntry.class);
-                    tx.transaction(() -> new TestEntry("http://localhost/1").save());
+                    tx.transaction(() -> new TestEntry("http://localhost/2").save());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -50,7 +50,7 @@ public class Main {
 
         try {
             executor.awaitTermination(2, TimeUnit.SECONDS);
-            Assert.assertNotNull(Context.instance().get(TestEntry.class, "http://localhost/1"));
+            Assert.assertNotNull(Context.instance().get(TestEntry.class, "http://localhost/2"));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
