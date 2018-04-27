@@ -4,32 +4,23 @@ import org.boudnik.framework.OBJ;
 
 import java.util.Arrays;
 
-public class ArrayTestEntry extends OBJ.Implementation<String[]> {
-    private String[] url;
+public class ArrayTestEntry extends OBJ.Implementation<String> {
+    private int[] url;
 
     public ArrayTestEntry() {
     }
 
-    public ArrayTestEntry(String... url) {
-        super(url);
+    public ArrayTestEntry(String key) {
+        super(key);
     }
 
-//    @Override
-//    public String[] getKey() {
-//        return url;
-//    }
-
-    public String[] getUrl() {
+    public int[] getUrl() {
         return url;
     }
 
-    public void setUrl(String[] url) {
+    public void setUrl(int[] url) {
         this.url = url;
     }
-//
-//    public void setKey(String[] url) {
-//        this.url = url;
-//    }
 
     @Override
     public boolean equals(Object o) {

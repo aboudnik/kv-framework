@@ -10,15 +10,15 @@ public class SaveGetArrayTest extends TransactionTest {
     @Test
     public void testCreateSaveCommit() {
         Context tx = Context.instance();
-        ArrayTestEntry arrayTestEntry = new ArrayTestEntry("testCreateSaveArrayCommit1", "testCreateSaveArrayCommit2");
+        ArrayTestEntry arrayTestEntry = new ArrayTestEntry("testCreateSaveArrayCommit1");
         tx.transaction(arrayTestEntry);
-        Assert.assertNotNull(tx.get(ArrayTestEntry.class, arrayTestEntry.getKey())); // <- fails
+        Assert.assertNotNull(tx.get(ArrayTestEntry.class, arrayTestEntry.getKey()));
     }
 
     @Test
     public void testCreateSaveRollback() {
         Context tx = Context.instance();
-        ArrayTestEntry arrayTestEntry = new ArrayTestEntry("testCreateSaveArrayRollback1", "testCreateSaveArrayRollback2").save();
+        ArrayTestEntry arrayTestEntry = new ArrayTestEntry("testCreateSaveArrayRollback1").save();
         Assert.assertNotNull(arrayTestEntry);
         tx.rollback();
         Assert.assertNull(tx.get(ArrayTestEntry.class, arrayTestEntry.getKey()));
@@ -27,7 +27,7 @@ public class SaveGetArrayTest extends TransactionTest {
     @Test(expected = RuntimeException.class)
     public void testCreateSaveRollbackViaException() {
         Context tx = Context.instance();
-        ArrayTestEntry arrayTestEntry = new ArrayTestEntry("testCreateSaveArrayRollback1", "testCreateSaveArrayRollback2");
+        ArrayTestEntry arrayTestEntry = new ArrayTestEntry("testCreateSaveArrayRollback1");
         try {
             tx.transaction(() -> {
                 arrayTestEntry.save();

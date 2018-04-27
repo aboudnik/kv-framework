@@ -12,7 +12,7 @@ public class SaveDeleteArrayTest extends TransactionTest {
     @Test
     public void testSaveDeleteCommit() {
         Context tx = Context.instance();
-        ArrayTestEntry arrayTestEntry = new ArrayTestEntry("CreateSaveDeleteCommitArray1", "CreateSaveDeleteCommitArray2");
+        ArrayTestEntry arrayTestEntry = new ArrayTestEntry("CreateSaveDeleteCommitArray1");
         tx.transaction(arrayTestEntry);
 
         tx.transaction(() -> {
@@ -26,7 +26,7 @@ public class SaveDeleteArrayTest extends TransactionTest {
     @Test
     public void testSaveDeleteRollback() {
         Context tx = Context.instance();
-        ArrayTestEntry arrayTestEntry = new ArrayTestEntry("CreateSaveDeleteCommitArray1", "CreateSaveDeleteCommitArray2");
+        ArrayTestEntry arrayTestEntry = new ArrayTestEntry("CreateSaveDeleteCommitArray1");
         tx.transaction(arrayTestEntry);
 
 
