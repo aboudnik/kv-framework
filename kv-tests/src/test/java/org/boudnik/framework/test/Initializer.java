@@ -14,10 +14,12 @@ import java.sql.*;
 import java.util.Arrays;
 
 public class Initializer {
-    private static final Class[] classes = {ComplexRefTestEntry.class, ComplexTestEntry.class, ComplexTestEntry2.class, MutableTestEntry.class, RefTestEntry.class, TestEntry.class, Person.class};
+    private static final Class[] classes = {ComplexRefTestEntry.class, ComplexTestEntry.class, ComplexTestEntry2.class,
+            MutableTestEntry.class, RefTestEntry.class, TestEntry.class, Person.class, ArrayTestEntry.class};
 
     public static void initIgnite() {
-        TransactionFactory.getOrCreateTransaction(IgniteTransaction.class, () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true)
+        TransactionFactory.getOrCreateTransaction(IgniteTransaction.class,
+                () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true)
                 .withCache(classes);
     }
 
