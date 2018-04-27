@@ -2,6 +2,7 @@ package org.boudnik.framework.h2;
 
 import org.boudnik.framework.Context;
 import org.boudnik.framework.OBJ;
+import org.boudnik.framework.util.Beans;
 
 import javax.cache.Cache;
 import java.io.InputStream;
@@ -34,7 +35,7 @@ public class H2Transaction extends Context {
                         V v = (V) ois.readObject();
                         v.setKey(identity);
                         map.put(identity, v);
-                        // TODO: 26.04.18 put copy of object from db to memento
+                        mementos.put(identity, Beans.clone(meta, v));
                         return v;
                     }
                 } else {
@@ -51,16 +52,7 @@ public class H2Transaction extends Context {
     @SuppressWarnings("unchecked")
     @Override
     protected OBJ<Object> getMementoValue(Map.Entry<Object, Object> memento) {
-        try {
-            Blob blob = (Blob) memento.getValue();
-            InputStream binaryStream = blob.getBinaryStream();
-            ObjectInputStream ois = new ObjectInputStream(binaryStream);
-            OBJ<Object> src = (OBJ<Object>) ois.readObject();
-            src.setKey(memento.getKey());
-            return src;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return (OBJ<Object>) memento.getValue();
     }
 
     @Override
