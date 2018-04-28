@@ -7,6 +7,7 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
         IgniteTransactionTestSuite.class,
         HazelcastTransactionTestSuite.class,
+        H2TransactionTestSuite.class,
 })
 public class AllProvidersTestSuite {
 }

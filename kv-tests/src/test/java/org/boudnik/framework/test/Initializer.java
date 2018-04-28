@@ -13,23 +13,27 @@ import org.jetbrains.annotations.NotNull;
 import java.sql.*;
 import java.util.Arrays;
 
+import static org.boudnik.framework.test.testsuites.TransactionTest.setProvider;
+
 public class Initializer {
     private static final Class[] classes = {ComplexRefTestEntry.class, ComplexTestEntry.class, ComplexTestEntry2.class,
             MutableTestEntry.class, RefTestEntry.class, TestEntry.class, Person.class, ArrayTestEntry.class};
 
-    public static void initIgnite() {
-        TransactionFactory.getOrCreateTransaction(IgniteTransaction.class,
+    public static IgniteTransaction initIgnite() {
+        setProvider("Ignite");
+        return TransactionFactory.getOrCreateTransaction(IgniteTransaction.class,
                 () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true)
                 .withCache(classes);
     }
 
-    public static void initHazelcast() {
-        TransactionFactory.getOrCreateTransaction(HazelcastTransaction.class,
+    public static HazelcastTransaction initHazelcast() {
+        setProvider("Hazelcast");
+        return TransactionFactory.getOrCreateTransaction(HazelcastTransaction.class,
                 () -> new HazelcastTransaction(Hazelcast.newHazelcastInstance()),
                 true);
     }
 
-    public static void initH2() {
+    public static H2Transaction initH2() {
         try {
             Class.forName("org.h2.Driver");
             Connection connection =
@@ -43,7 +47,8 @@ public class Initializer {
                 }
             });
             statement.executeBatch();
-            TransactionFactory.getOrCreateTransaction(H2Transaction.class, () -> new H2Transaction(connection), true);
+            setProvider("H2");
+            return TransactionFactory.getOrCreateTransaction(H2Transaction.class, () -> new H2Transaction(connection), true);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
