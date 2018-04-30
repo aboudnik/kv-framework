@@ -4,8 +4,6 @@ import org.boudnik.framework.util.Beans;
 
 import javax.cache.Cache;
 import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -17,14 +15,12 @@ import java.util.stream.Collectors;
  * @since 11/15/2017
  */
 public abstract class Context implements AutoCloseable {
-    private final Map<Class<? extends OBJ>, Map<Object, OBJ>> scope = new HashMap<>();
+    private final Map scope = new HashMap();
     private final Set<OBJ> deleted = new HashSet<>();
+    private final Map<Object, Object> mementos = new HashMap<>();
     protected final Map<Class, BeanInfo> meta = new HashMap<>();
-    protected final Map<Object, Object> mementos = new HashMap<>();
 
-    public abstract <K, V extends OBJ> V get(Class<V> clazz, K identity);
-
-    protected abstract OBJ<Object> getMementoValue(Map.Entry<Object, Object> memento);
+    protected abstract <K> Object getExternal(Class<? extends OBJ> clazz, K identity) throws Exception;
 
     protected abstract void startTransactionIfNotStarted();
 
@@ -36,60 +32,95 @@ public abstract class Context implements AutoCloseable {
 
     protected abstract void engineSpecificClearAction();
 
-    protected abstract <K, V, T extends Cache<K, V>> T cache(Class<? extends OBJ> clazz);
+    protected abstract <K, V extends OBJ<K>> Cache<K, V> cache(Class<? extends OBJ> clazz);
 
-    public OBJ save(OBJ obj) {
+    protected abstract <K, V extends OBJ<K>> V toObject(Object external, K identity) throws Exception;
+
+    private <K, V extends OBJ<K>> V getMementoValue(Map.Entry<K, Object> memento, Object value) throws Exception {
+        return toObject(value, memento.getKey());
+    }
+
+    public final <K, V extends OBJ<K>> V get(Class<V> clazz, K identity) {
+        final Map<K, V> map = getMap(clazz);
+        V obj = map.get(identity);
+        if (obj == null) {
+            try {
+                Object external = getExternal(clazz, identity);
+                if (external == null)
+                    return null;
+                V v = toObject(external, identity);
+                map.put(identity, v);
+                mementos.put(identity, external);
+                return v;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        } else
+            return obj;
+    }
+
+    public <K, V extends OBJ<K>> V save(V obj) {
         return save(obj, obj.getKey());
     }
 
-    public OBJ save(OBJ obj, Object key) {
+    public <K, V extends OBJ<K>> V save(V obj, K key) {
         if (key == null)
             throw new NullPointerException();
-        getMap(obj.getClass()).put(key, obj);
+        this.<K, V>getMap(obj.getClass()).put(key, obj);
         return obj;
     }
 
-    public void delete(OBJ obj) {
-        OBJ removed = getMap(obj.getClass()).remove(obj.getKey());
+    public <K, V extends OBJ<K>> void delete(V obj) {
+        V removed = this.<K, V>getMap(obj.getClass()).remove(obj.getKey());
         if (removed != null)
             deleted.add(removed);
     }
 
-    @SuppressWarnings("unchecked")
-    protected void revert(OBJ obj) {
+// TODO: 04/30/2018
+//    protected <K, V extends OBJ<K>> void revert(V obj) {
 //        unSave(obj);
-        //todo
-        cache(obj.getClass()).remove(obj.getKey());
+//        cache(obj.getClass()).remove(obj.getKey());
+//    }
+
+    private <K, V extends OBJ<K>> Map<K, V> getMap(Class<? extends OBJ> clazz) {
+        return this.<K, V>getScope().computeIfAbsent(clazz, cls -> new HashMap<>());
     }
 
-    protected Map<Object, OBJ> getMap(Class<? extends OBJ> clazz) {
-        return scope.computeIfAbsent(clazz, k -> new HashMap<>());
-    }
-
-    public void rollback() {
+    public <K, V extends OBJ<K>> void rollback() {
         try {
-            for (Map.Entry<Object, Object> memento : mementos.entrySet()) {
-                OBJ src = getMementoValue(memento);
+            Map<K, Object> mementos = getMementos();
+            for (Map.Entry<K, Object> memento : mementos.entrySet()) {
+                V src = getMementoValue(memento, memento.getValue());
                 Object dst = getMap(src.getClass()).get(memento.getKey());
                 if (dst != null)
                     Beans.set(meta, src, dst);
             }
             engineSpecificRollbackAction();
-        } catch (IllegalAccessException | InvocationTargetException | IntrospectionException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
             clear();
         }
     }
 
-    private void commit() {
+    @SuppressWarnings("unchecked")
+    private <K, V extends OBJ<K>> Map<Class<? extends OBJ>, Map<K, V>> getScope() {
+        return (Map<Class<? extends OBJ>, Map<K, V>>) scope;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <K> Map<K, Object> getMementos() {
+        return (Map<K, Object>) mementos;
+    }
+
+    private <K, V extends OBJ<K>> void commit() {
         try {
-            for (Map.Entry<Class<? extends OBJ>, Map<Object, OBJ>> byClass : scope.entrySet()) {
-                cache(byClass.getKey()).putAll(byClass.getValue());
+            Map<Class<? extends OBJ>, Map<K, V>> scope = getScope();
+            for (Map.Entry<Class<? extends OBJ>, Map<K, V>> byClass : scope.entrySet()) {
+                Cache<K, V> cache = cache(byClass.getKey());
+                cache.putAll(byClass.getValue());
             }
-            for (Map.Entry<? extends Class<? extends OBJ>, Set<Object>> entry :
-                    deleted.stream().collect(Collectors.groupingBy(OBJ::getClass, Collectors.mapping(OBJ::getKey, Collectors.toSet()))).entrySet())
-            {
+            for (Map.Entry<? extends Class<? extends OBJ>, Set<Object>> entry : deleted.stream().collect(Collectors.groupingBy(OBJ::getClass, Collectors.mapping(OBJ::getKey, Collectors.toSet()))).entrySet()) {
                 cache(entry.getKey()).removeAll(entry.getValue());
             }
             engineSpecificCommitAction();
@@ -109,8 +140,7 @@ public abstract class Context implements AutoCloseable {
         deleted.clear();
     }
 
-    @SuppressWarnings("unchecked")
-    public <T extends Context> T transaction(Transactionable transactionable) {
+    public Context transaction(Transactionable transactionable) {
         startTransactionIfNotStarted();
         try {
             transactionable.commit();
@@ -119,7 +149,7 @@ public abstract class Context implements AutoCloseable {
             rollback();
             throw new RuntimeException(e);
         }
-        return (T) this;
+        return this;
     }
 
     <K, V extends OBJ<K>> boolean isDeleted(V reference) {
@@ -136,22 +166,9 @@ public abstract class Context implements AutoCloseable {
             rollback();
     }
 
-    public <K, V extends OBJ> V getAndClose(Class<V> clazz, K identity) {
+    public <K, V extends OBJ<K>> V getAndClose(Class<V> clazz, K identity) {
         V value = get(clazz, identity);
         close();
         return value;
-    }
-
-    @FunctionalInterface
-    protected interface Worker {
-        /**
-         * Performs this operation on the given arguments.
-         *
-         * @param c   class
-         * @param map (key -> value)
-         */
-//        <K, V>
-        void accept(Class<? extends OBJ> c, Map<Object, OBJ> map, boolean isTombstone) throws IllegalAccessException;
-
     }
 }

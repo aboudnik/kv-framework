@@ -31,7 +31,7 @@ public class RollbackTest extends TransactionTest {
             });
         } catch (RuntimeException ignored) {
         } finally {
-            assertEquals("John", context.get(Person.class, SSN).fname);
+            assertEquals("John", context.getAndClose(Person.class, SSN).fname);
         }
     }
 

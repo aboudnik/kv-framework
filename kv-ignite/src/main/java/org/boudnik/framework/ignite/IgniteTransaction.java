@@ -1,13 +1,11 @@
 package org.boudnik.framework.ignite;
 
 import org.apache.ignite.Ignite;
-import org.apache.ignite.IgniteCache;
 import org.apache.ignite.binary.BinaryObject;
 import org.boudnik.framework.Context;
 import org.boudnik.framework.OBJ;
 
 import javax.cache.Cache;
-import java.util.Map;
 
 /**
  * @author Alexandre_Boudnik
@@ -27,9 +25,8 @@ public class IgniteTransaction extends Context {
 
     @Override
     protected void engineSpecificRollbackAction() {
-        org.apache.ignite.transactions.Transaction tx = ignite.transactions().tx();
         if (isTransactionExist())
-            tx.rollback();
+            ignite.transactions().tx().rollback();
     }
 
     @Override
@@ -41,13 +38,6 @@ public class IgniteTransaction extends Context {
         return ignite.transactions().tx() != null;
     }
 
-    @Override
-    protected OBJ<Object> getMementoValue(Map.Entry<Object, Object> memento) {
-        OBJ<Object> src = ((BinaryObject) memento.getValue()).deserialize();
-        src.setKey(memento.getKey());
-        return src;
-    }
-
     public IgniteTransaction withCache(Class... classes) {
         for (Class clazz : classes) {
             ignite.getOrCreateCache(clazz.getName());
@@ -55,31 +45,21 @@ public class IgniteTransaction extends Context {
         return this;
     }
 
-    @SuppressWarnings("unchecked")
-    public <K, V extends OBJ> V get(Class<V> clazz, K identity) {
-        Map<Object, OBJ> map = getMap(clazz);
-        V obj = (V) map.get(identity);
-        if (obj == null) {
-            BinaryObject binaryObject = igniteCache(clazz).<K, BinaryObject>withKeepBinary().get(identity);
-            if (binaryObject == null)
-                return null;
-            V v = binaryObject.deserialize();
-            v.setKey(identity);
-            map.put(identity, v);
-            mementos.put(identity, binaryObject);
-            return v;
-        } else
-            return obj;
-    }
-
-    private IgniteCache<Object, BinaryObject> igniteCache(Class<? extends OBJ> clazz) {
-        return ignite.cache(clazz.getName());
+    @Override
+    protected <K, V extends OBJ<K>> V toObject(Object external, K identity) {
+        V v = ((BinaryObject) external).deserialize();
+        v.setKey(identity);
+        return v;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    protected <K, V, T extends Cache<K, V>> T cache(Class<? extends OBJ> clazz) {
-        return (T) igniteCache(clazz);
+    protected <K> Object getExternal(Class<? extends OBJ> clazz, K identity) {
+        return ignite.cache(clazz.getName()).withKeepBinary().get(identity);
+    }
+
+    @Override
+    protected <K, V extends OBJ<K>> Cache<K, V> cache(Class<? extends OBJ> clazz) {
+        return ignite.cache(clazz.getName());
     }
 
     public IgniteTransaction tx() {

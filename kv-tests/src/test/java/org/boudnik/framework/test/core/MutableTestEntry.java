@@ -19,8 +19,9 @@ public class MutableTestEntry implements OBJ<String> {
         return url;
     }
 
-    public String getUrl() {
-        return url;
+    @Override
+    public void setKey(String key) {
+        this.url = key;
     }
 
     public String getValue() {

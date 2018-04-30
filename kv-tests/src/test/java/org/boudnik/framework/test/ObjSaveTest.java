@@ -1,6 +1,7 @@
 package org.boudnik.framework.test;
 
 import org.boudnik.framework.Context;
+import org.boudnik.framework.OBJ;
 import org.boudnik.framework.test.core.TestEntry;
 import org.boudnik.framework.test.testsuites.TransactionTest;
 import org.junit.Assert;

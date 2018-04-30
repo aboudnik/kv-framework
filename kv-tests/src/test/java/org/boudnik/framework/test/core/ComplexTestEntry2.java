@@ -18,6 +18,11 @@ public class ComplexTestEntry2 implements OBJ<OBJ<OBJ<String>>>  {
         return url;
     }
 
+    @Override
+    public void setKey(OBJ<OBJ<String>> key) {
+        this.url = (ComplexTestEntry) key;
+    }
+
     public String getValue() {
         return value;
     }

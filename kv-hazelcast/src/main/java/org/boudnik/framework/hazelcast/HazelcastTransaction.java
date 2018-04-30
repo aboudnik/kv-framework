@@ -11,9 +11,6 @@ import org.boudnik.framework.util.Beans;
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.spi.CachingProvider;
-import java.beans.IntrospectionException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Map;
 
 public class HazelcastTransaction extends Context {
 
@@ -23,10 +20,10 @@ public class HazelcastTransaction extends Context {
     private final HazelcastInstance hc;
 
     public HazelcastTransaction(HazelcastInstance hc) {
-        this(hc, new CacheConfig());
+        this(hc, new CacheConfig<>());
     }
 
-    public HazelcastTransaction(HazelcastInstance hc, CacheConfig config) {
+    public <K, V extends OBJ<K>> HazelcastTransaction(HazelcastInstance hc, CacheConfig<K, V> config) {
         this.hc = hc;
         cachingProvider = HazelcastServerCachingProvider.createCachingProvider(hc);
         this.config = config;
@@ -54,41 +51,25 @@ public class HazelcastTransaction extends Context {
     }
 
     @Override
-    protected OBJ<Object> getMementoValue(Map.Entry<Object, Object> memento) {
-        return (OBJ<Object>) memento.getValue();
-    }
-
-    @SuppressWarnings("unchecked")
-    public <K, V extends OBJ> V get(Class<V> clazz, K identity) {
-        Map<Object, OBJ> map = getMap(clazz);
-        V obj = (V) map.get(identity);
-        if (obj == null) {
-            Object object = cache(clazz).get(identity);
-            if (object == null)
-                return null;
-            try {
-                V v = (V) object;
-                v.setKey(identity);
-                map.put(identity, v);
-                mementos.put(identity, Beans.clone(meta, v));
-                return v;
-            } catch (IntrospectionException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
-                throw new RuntimeException(e);
-            }
-        } else
-            return obj;
+    protected <K, V extends OBJ<K>> V toObject(Object external, K identity) throws Exception {
+        //noinspection unchecked
+        V v = Beans.clone(meta, (V) external);
+        v.setKey(identity);
+        return v;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    protected <K, V, T extends Cache<K, V>> T cache(Class<? extends OBJ> clazz) {
+    protected <K> Object getExternal(Class<? extends OBJ> clazz, K identity) {
+        return cache(clazz).get(identity);
+    }
+
+    @Override
+    protected <K, V extends OBJ<K>> Cache<K, V> cache(Class<? extends OBJ> clazz) {
         CacheManager cacheManager = cachingProvider.getCacheManager();
-
-        Cache cache = ((cache = cacheManager.getCache(clazz.getName())) == null)
-                ? cacheManager.createCache(clazz.getName(), config)
-                : cache;
-
-        return (T) cache;
+        Cache<K, V> cache;
+        if ((cache = cacheManager.getCache(clazz.getName())) == null)
+            cache = cacheManager.createCache(clazz.getName(), getConfig());
+        return cache;
     }
 
     public HazelcastTransaction tx() {
@@ -103,5 +84,10 @@ public class HazelcastTransaction extends Context {
             hazelcastTransactionContext = hc.newTransactionContext();
             hazelcastTransactionContext.beginTransaction();
         }
+    }
+
+    private  <K, V extends OBJ<K>> CacheConfig<K, V> getConfig() {
+        //noinspection unchecked
+        return config;
     }
 }

@@ -46,7 +46,7 @@ public class Beans {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> T clone(Map<Class, BeanInfo> meta, T src) throws IntrospectionException, IllegalAccessException, InstantiationException, InvocationTargetException {
+    public static <T> T clone(Map<Class, BeanInfo> meta, T src) throws Exception {
         Object copy = src.getClass().newInstance();
         set(meta, src, copy);
         return (T) copy;
