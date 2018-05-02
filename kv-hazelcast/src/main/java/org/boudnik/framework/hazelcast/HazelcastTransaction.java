@@ -53,18 +53,18 @@ public class HazelcastTransaction extends Context {
     @Override
     protected <K, V extends OBJ<K>> V toObject(Object external, K identity) throws Exception {
         //noinspection unchecked
-        V v = Beans.clone(meta, (V) external);
+        V v = beans.clone((V) external);
         v.setKey(identity);
         return v;
     }
 
     @Override
-    protected <K> Object getExternal(Class<? extends OBJ> clazz, K identity) {
+    protected <K> Object getNative(Class<? extends OBJ> clazz, K identity) {
         return cache(clazz).get(identity);
     }
 
     @Override
-    protected <K, V extends OBJ<K>> Cache<K, V> cache(Class<? extends OBJ> clazz) {
+    public  <K, V extends OBJ<K>> Cache<K, V> cache(Class<? extends OBJ> clazz) {
         CacheManager cacheManager = cachingProvider.getCacheManager();
         Cache<K, V> cache;
         if ((cache = cacheManager.getCache(clazz.getName())) == null)

@@ -1,9 +1,9 @@
 package org.boudnik.framework.ignite;
 
 import org.apache.ignite.Ignite;
-import org.apache.ignite.binary.BinaryObject;
 import org.boudnik.framework.Context;
 import org.boudnik.framework.OBJ;
+import org.boudnik.framework.util.Beans;
 
 import javax.cache.Cache;
 
@@ -46,19 +46,21 @@ public class IgniteTransaction extends Context {
     }
 
     @Override
-    protected <K, V extends OBJ<K>> V toObject(Object external, K identity) {
-        V v = ((BinaryObject) external).deserialize();
+    protected <K, V extends OBJ<K>> V toObject(Object external, K identity) throws Exception {
+        //noinspection unchecked
+        V v = beans.clone((V) external);
         v.setKey(identity);
         return v;
     }
 
     @Override
-    protected <K> Object getExternal(Class<? extends OBJ> clazz, K identity) {
-        return ignite.cache(clazz.getName()).withKeepBinary().get(identity);
+    protected <K> Object getNative(Class<? extends OBJ> clazz, K identity) {
+        return ignite.cache(clazz.getName()).get(identity);
+//        return ignite.cache(clazz.getName()).withKeepBinary().get(identity);
     }
 
     @Override
-    protected <K, V extends OBJ<K>> Cache<K, V> cache(Class<? extends OBJ> clazz) {
+    public <K, V extends OBJ<K>> Cache<K, V> cache(Class<? extends OBJ> clazz) {
         return ignite.cache(clazz.getName());
     }
 

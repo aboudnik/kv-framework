@@ -3,24 +3,113 @@ package org.boudnik.framework;
 import org.boudnik.framework.util.Beans;
 
 import javax.cache.Cache;
-import java.beans.BeanInfo;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * @author Alexandre_Boudnik
  * @since 11/15/2017
  */
 public abstract class Context implements AutoCloseable {
-    private final Map scope = new HashMap();
+    //todo: make it private again
+    protected final Beans beans = new Beans();
+
+    enum State {
+        NEW {
+            @Override
+            void load() {
+            }
+
+            @Override
+            void save() {
+            }
+
+            @Override
+            void kill() {
+            }
+        },
+        HOLLY {
+            @Override
+            void load() {
+            }
+
+            @Override
+            void save() {
+            }
+
+            @Override
+            void kill() {
+            }
+        },
+        READ {
+            @Override
+            void load() {
+            }
+
+            @Override
+            void save() {
+            }
+
+            @Override
+            void kill() {
+            }
+        },
+        DIRTY {
+            @Override
+            void load() {
+            }
+
+            @Override
+            void save() {
+            }
+
+            @Override
+            void kill() {
+            }
+        },
+        DEAD;
+
+        void load() {
+        }
+
+        void save() {
+        }
+
+        void kill() {
+
+        }
+    }
+
+    class Cell<V extends OBJ<?>> {
+        final V obj;
+        V memento;
+        State state = State.NEW;
+
+        Cell(V obj) {
+            memento = beans.clone(this.obj = obj);
+        }
+
+        void revert() {
+            state.load();
+        }
+
+        boolean isDirty() {
+            return !beans.equals(memento, obj);
+        }
+
+        public void setState(State state) {
+            this.state = state;
+        }
+    }
+
+    private final Map cells = new HashMap();
     private final Set<OBJ> deleted = new HashSet<>();
     private final Map<Object, Object> mementos = new HashMap<>();
-    protected final Map<Class, BeanInfo> meta = new HashMap<>();
+    private int tranCount = 0;
 
-    protected abstract <K> Object getExternal(Class<? extends OBJ> clazz, K identity) throws Exception;
+    protected abstract <K> Object getNative(Class<? extends OBJ> clazz, K identity) throws Exception;
 
     protected abstract void startTransactionIfNotStarted();
 
@@ -32,7 +121,7 @@ public abstract class Context implements AutoCloseable {
 
     protected abstract void engineSpecificClearAction();
 
-    protected abstract <K, V extends OBJ<K>> Cache<K, V> cache(Class<? extends OBJ> clazz);
+    public abstract <K, V extends OBJ<K>> Cache<K, V> cache(Class<? extends OBJ> clazz);
 
     protected abstract <K, V extends OBJ<K>> V toObject(Object external, K identity) throws Exception;
 
@@ -40,23 +129,35 @@ public abstract class Context implements AutoCloseable {
         return toObject(value, memento.getKey());
     }
 
+    private <K, V extends OBJ<K>> Cell<V> getCell(V obj) {
+        return this.<K, V>getMap(obj.getClass()).get(obj.getKey());
+    }
+
+    private <K, V extends OBJ<K>> V putCell(K key, V obj, State state) {
+        this.<K, V>getMap(obj.getClass()).put(key, new Cell<>(obj));
+        return obj;
+    }
+
+    private <K, V extends OBJ<K>> Map<K, Cell<V>> getMap(Class<? extends OBJ> clazz) {
+        return this.<K, V>getScope().computeIfAbsent(clazz, cls -> new HashMap<>());
+    }
+
     public final <K, V extends OBJ<K>> V get(Class<V> clazz, K identity) {
-        final Map<K, V> map = getMap(clazz);
-        V obj = map.get(identity);
-        if (obj == null) {
+        Map<K, Cell<V>> map = getMap(clazz);
+        Cell<V> cell = map.get(identity);
+        if (cell == null)
             try {
-                Object external = getExternal(clazz, identity);
+                Object external = getNative(clazz, identity);
                 if (external == null)
                     return null;
                 V v = toObject(external, identity);
-                map.put(identity, v);
-                mementos.put(identity, external);
+                putCell(identity, v, State.HOLLY);
                 return v;
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-        } else
-            return obj;
+        else
+            return cell.obj;
     }
 
     public <K, V extends OBJ<K>> V save(V obj) {
@@ -66,46 +167,17 @@ public abstract class Context implements AutoCloseable {
     public <K, V extends OBJ<K>> V save(V obj, K key) {
         if (key == null)
             throw new NullPointerException();
-        this.<K, V>getMap(obj.getClass()).put(key, obj);
-        return obj;
+        return putCell(key, obj, State.HOLLY);
     }
 
     public <K, V extends OBJ<K>> void delete(V obj) {
-        V removed = this.<K, V>getMap(obj.getClass()).remove(obj.getKey());
-        if (removed != null)
-            deleted.add(removed);
+        getCell(obj).setState(State.DEAD);
     }
 
-// TODO: 04/30/2018
-//    protected <K, V extends OBJ<K>> void revert(V obj) {
-//        unSave(obj);
-//        cache(obj.getClass()).remove(obj.getKey());
-//    }
-
-    private <K, V extends OBJ<K>> Map<K, V> getMap(Class<? extends OBJ> clazz) {
-        return this.<K, V>getScope().computeIfAbsent(clazz, cls -> new HashMap<>());
-    }
-
-    public <K, V extends OBJ<K>> void rollback() {
-        try {
-            Map<K, Object> mementos = getMementos();
-            for (Map.Entry<K, Object> memento : mementos.entrySet()) {
-                V src = getMementoValue(memento, memento.getValue());
-                Object dst = getMap(src.getClass()).get(memento.getKey());
-                if (dst != null)
-                    Beans.set(meta, src, dst);
-            }
-            engineSpecificRollbackAction();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            clear();
-        }
-    }
 
     @SuppressWarnings("unchecked")
-    private <K, V extends OBJ<K>> Map<Class<? extends OBJ>, Map<K, V>> getScope() {
-        return (Map<Class<? extends OBJ>, Map<K, V>>) scope;
+    private <K, V extends OBJ<K>> Map<Class<? extends OBJ>, Map<K, Cell<V>>> getScope() {
+        return (Map<Class<? extends OBJ>, Map<K, Cell<V>>>) cells;
     }
 
     @SuppressWarnings("unchecked")
@@ -114,40 +186,65 @@ public abstract class Context implements AutoCloseable {
     }
 
     private <K, V extends OBJ<K>> void commit() {
-        try {
-            Map<Class<? extends OBJ>, Map<K, V>> scope = getScope();
-            for (Map.Entry<Class<? extends OBJ>, Map<K, V>> byClass : scope.entrySet()) {
-                Cache<K, V> cache = cache(byClass.getKey());
-                cache.putAll(byClass.getValue());
+        if (tranCount == 0)
+            throw new TenacityException();
+        Set<K> toRemove = new HashSet<>();
+        Map<K, V> toPut = new HashMap<>();
+        for (Map.Entry<Class<? extends OBJ>, Map<K, Cell<V>>> byClass : this.<K, V>getScope().entrySet()) {
+            Cache<K, V> cache = cache(byClass.getKey());
+            for (Map.Entry<K, Cell<V>> entry : byClass.getValue().entrySet()) {
+                K key = entry.getKey();
+                Cell<V> cell = entry.getValue();
+                if (cell.deleted)
+                    toRemove.add(key);
+                else if (cell.isDirty())
+                    toPut.put(key, cell.obj);
             }
-            for (Map.Entry<? extends Class<? extends OBJ>, Set<Object>> entry : deleted.stream().collect(Collectors.groupingBy(OBJ::getClass, Collectors.mapping(OBJ::getKey, Collectors.toSet()))).entrySet()) {
-                cache(entry.getKey()).removeAll(entry.getValue());
-            }
-            engineSpecificCommitAction();
-        } finally {
-            clear();
+            cache.removeAll(toRemove);
+            toRemove.clear();
+            cache.putAll(toPut);
+            toPut.clear();
         }
+        engineSpecificCommitAction();
     }
+
+    public <K, V extends OBJ<K>> void rollback() {
+        if (tranCount == 0)
+            throw new TenacityException();
+        for (Map.Entry<Class<? extends OBJ>, Map<K, Cell<V>>> byClass : this.<K, V>getScope().entrySet()) {
+            Cache<K, V> cache = cache(byClass.getKey());
+            for (Map.Entry<K, Cell<V>> entry : byClass.getValue().entrySet()) {
+                entry.getValue().revert();
+            }
+        }
+        engineSpecificRollbackAction();
+    }
+
+    // TODO: 04/30/2018
+    //    }
+    //        cache(obj.getClass()).remove(obj.getKey());
+    //        unSave(obj);
+    //    protected <K, V extends OBJ<K>> void revert(V obj) {
 
     public Context transaction(OBJ obj) {
         return transaction(obj::save);
     }
 
-    private void clear() {
-        engineSpecificClearAction();
-        scope.clear();
-        mementos.clear();
-        deleted.clear();
-    }
-
     public Context transaction(Transactionable transactionable) {
-        startTransactionIfNotStarted();
         try {
+            tranCount++;
+            startTransactionIfNotStarted();
             transactionable.commit();
             commit();
         } catch (Exception e) {
             rollback();
-            throw new RuntimeException(e);
+            throw new TenacityException(e);
+        } finally {
+            engineSpecificClearAction();
+            cells.clear();
+            mementos.clear();
+            deleted.clear();
+            tranCount--;
         }
         return this;
     }

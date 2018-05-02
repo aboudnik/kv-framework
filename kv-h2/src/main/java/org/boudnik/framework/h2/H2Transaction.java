@@ -19,13 +19,13 @@ public class H2Transaction extends Context {
     @Override
     protected <K, V extends OBJ<K>> V toObject(Object external, K identity) throws Exception {
         //noinspection unchecked
-        V v = Beans.clone(meta, (V) external);
+        V v = beans.clone((V) external);
         v.setKey(identity);
         return v;
     }
 
     @Override
-    protected <K> Object getExternal(Class<? extends OBJ> clazz, K identity) throws Exception {
+    protected <K> Object getNative(Class<? extends OBJ> clazz, K identity) throws Exception {
         try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT value FROM " + clazz.getSimpleName() + " WHERE key=?")) {
             preparedStatement.setObject(1, identity, Types.JAVA_OBJECT);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -41,7 +41,7 @@ public class H2Transaction extends Context {
     }
 
     @Override
-    protected <K, V extends OBJ<K>> Cache<K, V> cache(Class<? extends OBJ> clazz) {
+    public <K, V extends OBJ<K>> Cache<K, V> cache(Class<? extends OBJ> clazz) {
         return new H2Cache<>(connection, clazz);
     }
 
