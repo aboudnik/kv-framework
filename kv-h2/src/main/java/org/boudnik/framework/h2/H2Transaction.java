@@ -27,7 +27,8 @@ public class H2Transaction extends Context {
             try {
                 PreparedStatement preparedStatement =
                         connection.prepareStatement("SELECT value FROM " + clazz.getSimpleName() + " WHERE key=?");
-                preparedStatement.setObject(1, identity, Types.JAVA_OBJECT);
+                String keyStr = Utils.encode(identity);
+                preparedStatement.setObject(1, keyStr, Types.CHAR);
                 ResultSet resultSet = preparedStatement.executeQuery();
                 if (resultSet.next()) {
                     try (InputStream binaryStream = resultSet.getBinaryStream(1);
