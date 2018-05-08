@@ -15,84 +15,27 @@ import java.util.Set;
 public abstract class Context implements AutoCloseable {
     //todo: make it private again
     protected final Beans beans = new Beans();
+    private boolean rollback = false;
 
     enum State {
-        NEW {
-            @Override
-            void load() {
-            }
-
-            @Override
-            void save() {
-            }
-
-            @Override
-            void kill() {
-            }
-        },
-        HOLLY {
-            @Override
-            void load() {
-            }
-
-            @Override
-            void save() {
-            }
-
-            @Override
-            void kill() {
-            }
-        },
-        READ {
-            @Override
-            void load() {
-            }
-
-            @Override
-            void save() {
-            }
-
-            @Override
-            void kill() {
-            }
-        },
-        DIRTY {
-            @Override
-            void load() {
-            }
-
-            @Override
-            void save() {
-            }
-
-            @Override
-            void kill() {
-            }
-        },
-        DEAD;
-
-        void load() {
-        }
-
-        void save() {
-        }
-
-        void kill() {
-
-        }
+        NEW,
+        CURRENT,
+        DEAD
     }
 
     class Cell<V extends OBJ<?>> {
         final V obj;
-        V memento;
-        State state = State.NEW;
+        final V memento;
+        State state;
 
-        Cell(V obj) {
-            memento = beans.clone(this.obj = obj);
+        Cell(V obj, State state, V memento) {
+            this.obj = obj;
+            this.memento = memento;
+            this.state = state;
         }
 
         void revert() {
-            state.load();
+            beans.set(memento, obj);
         }
 
         boolean isDirty() {
@@ -105,8 +48,6 @@ public abstract class Context implements AutoCloseable {
     }
 
     private final Map cells = new HashMap();
-    private final Set<OBJ> deleted = new HashSet<>();
-    private final Map<Object, Object> mementos = new HashMap<>();
     private int tranCount = 0;
 
     protected abstract <K> Object getNative(Class<? extends OBJ> clazz, K identity) throws Exception;
@@ -133,25 +74,22 @@ public abstract class Context implements AutoCloseable {
         return this.<K, V>getMap(obj.getClass()).get(obj.getKey());
     }
 
-    private <K, V extends OBJ<K>> V putCell(K key, V obj, State state) {
-        this.<K, V>getMap(obj.getClass()).put(key, new Cell<>(obj));
-        return obj;
-    }
-
     private <K, V extends OBJ<K>> Map<K, Cell<V>> getMap(Class<? extends OBJ> clazz) {
         return this.<K, V>getScope().computeIfAbsent(clazz, cls -> new HashMap<>());
     }
 
-    public final <K, V extends OBJ<K>> V get(Class<V> clazz, K identity) {
+    public final <K, V extends OBJ<K>> V get(Class<V> clazz, K key) {
+        if (tranCount == 0)
+            throw new TenacityException();
         Map<K, Cell<V>> map = getMap(clazz);
-        Cell<V> cell = map.get(identity);
+        Cell<V> cell = map.get(key);
         if (cell == null)
             try {
-                Object external = getNative(clazz, identity);
+                Object external = getNative(clazz, key);
                 if (external == null)
                     return null;
-                V v = toObject(external, identity);
-                putCell(identity, v, State.HOLLY);
+                V v = toObject(external, key);
+                this.<K, V>getMap(v.getClass()).put(key, new Cell<>(v, State.CURRENT, beans.clone(v)));
                 return v;
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -160,17 +98,25 @@ public abstract class Context implements AutoCloseable {
             return cell.obj;
     }
 
-    public <K, V extends OBJ<K>> V save(V obj) {
+    <K, V extends OBJ<K>> V save(V obj) {
+        if (tranCount == 0)
+            throw new TenacityException();
         return save(obj, obj.getKey());
     }
 
-    public <K, V extends OBJ<K>> V save(V obj, K key) {
+    private <K, V extends OBJ<K>> V save(V obj, K key) {
         if (key == null)
             throw new NullPointerException();
-        return putCell(key, obj, State.HOLLY);
+        @SuppressWarnings("unchecked") Class<V> clazz = (Class<V>) obj.getClass();
+        V wasHere = get(clazz, key);
+        Map<K, Cell<V>> map = getMap(clazz);
+        map.put(key, wasHere == null ? new Cell<>(obj, State.NEW, beans.clone(obj)) : new Cell<>(obj, State.CURRENT, wasHere));
+        return obj;
     }
 
-    public <K, V extends OBJ<K>> void delete(V obj) {
+    <K, V extends OBJ<K>> void delete(V obj) {
+        if (tranCount == 0)
+            throw new TenacityException();
         getCell(obj).setState(State.DEAD);
     }
 
@@ -180,30 +126,25 @@ public abstract class Context implements AutoCloseable {
         return (Map<Class<? extends OBJ>, Map<K, Cell<V>>>) cells;
     }
 
-    @SuppressWarnings("unchecked")
-    private <K> Map<K, Object> getMementos() {
-        return (Map<K, Object>) mementos;
-    }
-
     private <K, V extends OBJ<K>> void commit() {
         if (tranCount == 0)
             throw new TenacityException();
         Set<K> toRemove = new HashSet<>();
         Map<K, V> toPut = new HashMap<>();
         for (Map.Entry<Class<? extends OBJ>, Map<K, Cell<V>>> byClass : this.<K, V>getScope().entrySet()) {
+            toRemove.clear();
+            toPut.clear();
             Cache<K, V> cache = cache(byClass.getKey());
             for (Map.Entry<K, Cell<V>> entry : byClass.getValue().entrySet()) {
                 K key = entry.getKey();
                 Cell<V> cell = entry.getValue();
-                if (cell.deleted)
+                if (cell.state == State.DEAD)
                     toRemove.add(key);
-                else if (cell.isDirty())
+                else if (cell.state == State.NEW || cell.isDirty())
                     toPut.put(key, cell.obj);
             }
             cache.removeAll(toRemove);
-            toRemove.clear();
             cache.putAll(toPut);
-            toPut.clear();
         }
         engineSpecificCommitAction();
     }
@@ -211,13 +152,18 @@ public abstract class Context implements AutoCloseable {
     public <K, V extends OBJ<K>> void rollback() {
         if (tranCount == 0)
             throw new TenacityException();
+        rollback = true;
+        tranCount = 0;
+    }
+
+    private <K, V extends OBJ<K>> void doRollback() {
         for (Map.Entry<Class<? extends OBJ>, Map<K, Cell<V>>> byClass : this.<K, V>getScope().entrySet()) {
-            Cache<K, V> cache = cache(byClass.getKey());
             for (Map.Entry<K, Cell<V>> entry : byClass.getValue().entrySet()) {
                 entry.getValue().revert();
             }
         }
         engineSpecificRollbackAction();
+        cells.clear();
     }
 
     // TODO: 04/30/2018
@@ -232,25 +178,29 @@ public abstract class Context implements AutoCloseable {
 
     public Context transaction(Transactionable transactionable) {
         try {
-            tranCount++;
+            tranCount = 1;
             startTransactionIfNotStarted();
             transactionable.commit();
-            commit();
+            if (rollback)
+                doRollback();
+            else
+                commit();
         } catch (Exception e) {
-            rollback();
-            throw new TenacityException(e);
+            doRollback();
+            if (e instanceof TenacityException)
+                throw e;
+            else
+                throw new TenacityException(e);
         } finally {
             engineSpecificClearAction();
             cells.clear();
-            mementos.clear();
-            deleted.clear();
-            tranCount--;
+            tranCount = 0;
         }
         return this;
     }
 
     <K, V extends OBJ<K>> boolean isDeleted(V reference) {
-        return deleted.contains(reference);
+        return getScope().get(reference.getClass()).get(reference.getKey()).state == State.DEAD;
     }
 
     public static Context instance() {

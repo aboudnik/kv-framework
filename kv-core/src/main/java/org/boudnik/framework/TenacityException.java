@@ -10,6 +10,5 @@ public class TenacityException extends RuntimeException {
     }
 
     public TenacityException() {
-        System.out.println("TenacityException.TenacityException");
     }
 }
