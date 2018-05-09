@@ -2,13 +2,11 @@ package org.boudnik.framework.h2;
 
 import org.boudnik.framework.Context;
 import org.boudnik.framework.OBJ;
-import org.boudnik.framework.util.Beans;
 
 import javax.cache.Cache;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.sql.*;
-import java.util.Map;
 
 public class H2Transaction extends Context {
 
@@ -18,25 +16,16 @@ public class H2Transaction extends Context {
         this.connection = connection;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public <K, V extends OBJ> V get(Class<V> clazz, K identity) {
-        final Map<Object, OBJ> map = getMap(clazz);
-        V obj = (V) map.get(identity);
-        if (obj == null) {
-            try {
-                PreparedStatement preparedStatement =
-                        connection.prepareStatement("SELECT value FROM " + clazz.getSimpleName() + " WHERE key=?");
-                String keyStr = Utils.encode(identity);
-                preparedStatement.setObject(1, keyStr, Types.CHAR);
-                ResultSet resultSet = preparedStatement.executeQuery();
+    protected <K> Object getNative(Class<? extends OBJ> clazz, K identity) throws Exception {
+        try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT value FROM " + clazz.getSimpleName() + " WHERE key=?")) {
+            preparedStatement.setObject(1, Utils.encode(identity), Types.CHAR);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
                     try (InputStream binaryStream = resultSet.getBinaryStream(1);
                          ObjectInputStream ois = new ObjectInputStream(binaryStream)) {
-                        V v = (V) ois.readObject();
+                        @SuppressWarnings("unchecked") OBJ<K> v = (OBJ<K>) ois.readObject();
                         v.setKey(identity);
-                        map.put(identity, v);
-                        mementos.put(identity, Beans.clone(meta, v));
                         return v;
                     }
                 } else {
@@ -45,15 +34,15 @@ public class H2Transaction extends Context {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-        } else {
-            return obj;
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    protected OBJ<Object> getMementoValue(Map.Entry<Object, Object> memento) {
-        return (OBJ<Object>) memento.getValue();
+    protected <K, V extends OBJ<K>> V toObject(Object external, K identity) {
+        //noinspection unchecked
+        V v = beans.clone((V) external);
+        v.setKey(identity);
+        return v;
     }
 
     @Override
@@ -99,9 +88,8 @@ public class H2Transaction extends Context {
 
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    protected <K, V, T extends Cache<K, V>> T cache(Class<? extends OBJ> clazz) {
-        return (T) new H2Cache<K, V>(connection, clazz);
+    public <K, V extends OBJ<K>> Cache<K, V> cache(Class<? extends OBJ> clazz) {
+        return new H2Cache<>(connection, clazz);
     }
 }

@@ -6,7 +6,6 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.transaction.TransactionContext;
 import org.boudnik.framework.Context;
 import org.boudnik.framework.OBJ;
-import org.boudnik.framework.util.Beans;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -23,6 +22,7 @@ public class HazelcastTransaction extends Context {
         this(hc, new CacheConfig<>());
     }
 
+    @SuppressWarnings("WeakerAccess")
     public <K, V extends OBJ<K>> HazelcastTransaction(HazelcastInstance hc, CacheConfig<K, V> config) {
         this.hc = hc;
         cachingProvider = HazelcastServerCachingProvider.createCachingProvider(hc);
@@ -51,7 +51,7 @@ public class HazelcastTransaction extends Context {
     }
 
     @Override
-    protected <K, V extends OBJ<K>> V toObject(Object external, K identity) throws Exception {
+    protected <K, V extends OBJ<K>> V toObject(Object external, K identity) {
         //noinspection unchecked
         V v = beans.clone((V) external);
         v.setKey(identity);

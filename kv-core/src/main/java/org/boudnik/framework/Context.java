@@ -63,11 +63,7 @@ public abstract class Context implements AutoCloseable {
 
     public abstract <K, V extends OBJ<K>> Cache<K, V> cache(Class<? extends OBJ> clazz);
 
-    protected abstract <K, V extends OBJ<K>> V toObject(Object external, K identity) throws Exception;
-
-    private <K, V extends OBJ<K>> V getMementoValue(Map.Entry<K, Object> memento, Object value) throws Exception {
-        return toObject(value, memento.getKey());
-    }
+    protected abstract <K, V extends OBJ<K>> V toObject(Object external, K identity);
 
     private <K, V extends OBJ<K>> Cell<V> getCell(V obj) {
         return this.<K, V>getMap(obj.getClass()).get(obj.getKey());
@@ -149,7 +145,7 @@ public abstract class Context implements AutoCloseable {
         engineSpecificCommitAction();
     }
 
-    public <K, V extends OBJ<K>> void rollback() {
+    public void rollback() {
         if (tranCount == 0)
             throw new TenacityException("rollback() has been called outside of transaction boundary");
         rollback = true;
