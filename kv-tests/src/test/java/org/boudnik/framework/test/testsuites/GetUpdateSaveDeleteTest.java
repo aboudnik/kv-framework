@@ -2,8 +2,9 @@ package org.boudnik.framework.test.testsuites;
 
 import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.MutableTestEntry;
-import org.junit.Assert;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class GetUpdateSaveDeleteTest extends TransactionTest {
 
@@ -12,58 +13,67 @@ public class GetUpdateSaveDeleteTest extends TransactionTest {
     @Test
     public void testGetUpdateSaveDeleteCommit() {
         Context tx = Context.instance();
-        tx.transaction(new MutableTestEntry("testGetUpdateSaveDeleteCommit"));
-
-        final MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteCommit");
-        Assert.assertNotNull(entry);
-        Assert.assertNull(entry.getValue());
+        tx.transaction(() -> new MutableTestEntry("testGetUpdateSaveDeleteCommit").save());
 
         tx.transaction(() -> {
+            final MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteCommit");
+            assertNotNull(entry);
+            assertNull(entry.getValue());
             entry.setValue(NEW_VALUE);
             entry.save();
             entry.delete();
         });
-        Assert.assertNull(tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteCommit"));
+        tx.transaction(() -> assertNull(tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteCommit")));
     }
 
     @Test
     public void testGetUpdateSaveDeleteRollback() {
         Context tx = Context.instance();
-        tx.transaction(new MutableTestEntry("testGetUpdateSaveDeleteRollback"));
+        tx.transaction(() -> new MutableTestEntry("testGetUpdateSaveDeleteRollback").save());
 
-        MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteRollback");
-        Assert.assertNotNull(entry);
-        Assert.assertNull(entry.getValue());
+        tx.transaction(() -> {
+            MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteRollback");
+            assertNotNull(entry);
+            assertNull(entry.getValue());
 
-        entry.setValue(NEW_VALUE);
-        MutableTestEntry saveResult = entry.save();
-        Assert.assertNotNull(saveResult);
-        entry.delete();
-        tx.rollback();
-        entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteRollback");
-        Assert.assertNotNull(entry);
-        Assert.assertNull(entry.getValue());
+            entry.setValue(NEW_VALUE);
+            MutableTestEntry saveResult = entry.save();
+            assertNotNull(saveResult);
+            entry.delete();
+            tx.rollback();
+        });
+        tx.transaction(() -> {
+            MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteRollback");
+            assertNotNull(entry);
+            assertNull(entry.getValue());
+        });
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testGetUpdateSaveDeleteRollbackViaException() {
         Context tx = Context.instance();
-        tx.transaction(new MutableTestEntry("testGetUpdateSaveDeleteRollback"));
+        tx.transaction(() -> new MutableTestEntry("testGetUpdateSaveDeleteRollback").save());
 
-        final MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteRollback");
-        Assert.assertNotNull(entry);
-        Assert.assertNull(entry.getValue());
         try {
             tx.transaction(() -> {
-                entry.setValue(NEW_VALUE);
-                entry.save();
-                entry.delete();
-                throw new RuntimeException("Rollback Exception");
+                final MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteRollback");
+                assertNotNull(entry);
+                assertNull(entry.getValue());
+                tx.transaction(() -> {
+                    entry.setValue(NEW_VALUE);
+                    entry.save();
+                    entry.delete();
+                    throw new RuntimeException("Rollback Exception");
+                });
             });
+        } catch (RuntimeException e){
+            assertEquals("Rollback Exception", e.getMessage());
         } finally {
-            MutableTestEntry updatedEntry = tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteRollback");
-            Assert.assertNotNull(updatedEntry);
-            Assert.assertNull(updatedEntry.getValue());
+            tx.transaction(() -> {
+                MutableTestEntry updatedEntry = tx.get(MutableTestEntry.class, "testGetUpdateSaveDeleteRollback");
+                assertNotNull(updatedEntry);
+                assertNull(updatedEntry.getValue());
+            });
         }
     }
 }

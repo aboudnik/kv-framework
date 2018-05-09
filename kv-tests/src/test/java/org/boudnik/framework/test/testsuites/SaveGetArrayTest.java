@@ -2,8 +2,9 @@ package org.boudnik.framework.test.testsuites;
 
 import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.ArrayTestEntry;
-import org.junit.Assert;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class SaveGetArrayTest extends TransactionTest {
 
@@ -12,22 +13,29 @@ public class SaveGetArrayTest extends TransactionTest {
         Context tx = Context.instance();
         ArrayTestEntry arrayTestEntry = new ArrayTestEntry("testCreateSaveArrayCommit1");
         arrayTestEntry.setUrl(new int[]{1, 2, 3, 4, 5});
-        tx.transaction(arrayTestEntry);
-        ArrayTestEntry actual = tx.get(ArrayTestEntry.class, arrayTestEntry.getKey());
-        Assert.assertNotNull(actual);
-        Assert.assertArrayEquals(arrayTestEntry.getUrl(), actual.getUrl());
+        tx.transaction(arrayTestEntry::save);
+        tx.transaction(() -> {
+            ArrayTestEntry actual = tx.get(ArrayTestEntry.class, arrayTestEntry.getKey());
+            assertNotNull(actual);
+            assertArrayEquals(arrayTestEntry.getUrl(), actual.getUrl());
+        });
     }
 
     @Test
     public void testCreateSaveRollback() {
         Context tx = Context.instance();
-        ArrayTestEntry arrayTestEntry = new ArrayTestEntry("testCreateSaveArrayRollback1").save();
-        Assert.assertNotNull(arrayTestEntry);
-        tx.rollback();
-        Assert.assertNull(tx.get(ArrayTestEntry.class, arrayTestEntry.getKey()));
+        tx.transaction(() -> {
+            ArrayTestEntry arrayTestEntry = new ArrayTestEntry("testCreateSaveArrayRollback1").save();
+            assertNotNull(arrayTestEntry);
+            tx.rollback();
+        });
+        tx.transaction(() -> {
+            ArrayTestEntry arrayTestEntry = new ArrayTestEntry("testCreateSaveArrayRollback1");
+            assertNull(tx.get(ArrayTestEntry.class, arrayTestEntry.getKey()));
+        });
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testCreateSaveRollbackViaException() {
         Context tx = Context.instance();
         ArrayTestEntry arrayTestEntry = new ArrayTestEntry("testCreateSaveArrayRollback1");
@@ -36,8 +44,10 @@ public class SaveGetArrayTest extends TransactionTest {
                 arrayTestEntry.save();
                 throw new RuntimeException("Rollback Exception");
             });
+        } catch (RuntimeException e) {
+            assertEquals("Rollback Exception", e.getMessage());
         } finally {
-            Assert.assertNull(tx.get(ArrayTestEntry.class, arrayTestEntry.getKey()));
+            tx.transaction(() -> assertNull(tx.get(ArrayTestEntry.class, arrayTestEntry.getKey())));
         }
     }
 }

@@ -13,7 +13,6 @@ import java.util.Set;
  * @since 11/15/2017
  */
 public abstract class Context implements AutoCloseable {
-    //todo: make it private again
     protected final Beans beans = new Beans();
     private boolean rollback = false;
 
@@ -42,8 +41,8 @@ public abstract class Context implements AutoCloseable {
             return !beans.equals(memento, obj);
         }
 
-        public void setState(State state) {
-            this.state = state;
+        void setDeleted() {
+            this.state = State.DEAD;
         }
     }
 
@@ -80,7 +79,7 @@ public abstract class Context implements AutoCloseable {
 
     public final <K, V extends OBJ<K>> V get(Class<V> clazz, K key) {
         if (tranCount == 0)
-            throw new TenacityException();
+            throw new TenacityException("get(class, key) has been called outside of transaction boundary");
         Map<K, Cell<V>> map = getMap(clazz);
         Cell<V> cell = map.get(key);
         if (cell == null)
@@ -100,7 +99,7 @@ public abstract class Context implements AutoCloseable {
 
     <K, V extends OBJ<K>> V save(V obj) {
         if (tranCount == 0)
-            throw new TenacityException();
+            throw new TenacityException("save() has been called outside of transaction boundary");
         return save(obj, obj.getKey());
     }
 
@@ -108,16 +107,19 @@ public abstract class Context implements AutoCloseable {
         if (key == null)
             throw new NullPointerException();
         @SuppressWarnings("unchecked") Class<V> clazz = (Class<V>) obj.getClass();
-        V wasHere = get(clazz, key);
         Map<K, Cell<V>> map = getMap(clazz);
-        map.put(key, wasHere == null ? new Cell<>(obj, State.NEW, beans.clone(obj)) : new Cell<>(obj, State.CURRENT, wasHere));
+        Cell<V> cell = map.get(key);
+        if (cell == null) {
+            V wasHere = get(clazz, key);
+            map.put(key, wasHere == null ? new Cell<>(obj, State.NEW, beans.clone(obj)) : new Cell<>(obj, State.CURRENT, wasHere));
+        }
         return obj;
     }
 
     <K, V extends OBJ<K>> void delete(V obj) {
         if (tranCount == 0)
-            throw new TenacityException();
-        getCell(obj).setState(State.DEAD);
+            throw new TenacityException("delete() has been called outside of transaction boundary");
+        getCell(obj).setDeleted();
     }
 
 
@@ -127,8 +129,6 @@ public abstract class Context implements AutoCloseable {
     }
 
     private <K, V extends OBJ<K>> void commit() {
-        if (tranCount == 0)
-            throw new TenacityException();
         Set<K> toRemove = new HashSet<>();
         Map<K, V> toPut = new HashMap<>();
         for (Map.Entry<Class<? extends OBJ>, Map<K, Cell<V>>> byClass : this.<K, V>getScope().entrySet()) {
@@ -151,7 +151,7 @@ public abstract class Context implements AutoCloseable {
 
     public <K, V extends OBJ<K>> void rollback() {
         if (tranCount == 0)
-            throw new TenacityException();
+            throw new TenacityException("rollback() has been called outside of transaction boundary");
         rollback = true;
         tranCount = 0;
     }
@@ -166,12 +166,7 @@ public abstract class Context implements AutoCloseable {
         cells.clear();
     }
 
-    // TODO: 04/30/2018
-    //    }
-    //        cache(obj.getClass()).remove(obj.getKey());
-    //        unSave(obj);
-    //    protected <K, V extends OBJ<K>> void revert(V obj) {
-
+    @Deprecated
     public Context transaction(OBJ obj) {
         return transaction(obj::save);
     }
@@ -187,14 +182,12 @@ public abstract class Context implements AutoCloseable {
                 commit();
         } catch (Exception e) {
             doRollback();
-            if (e instanceof TenacityException)
-                throw e;
-            else
-                throw new TenacityException(e);
+            throw e;
         } finally {
             engineSpecificClearAction();
             cells.clear();
             tranCount = 0;
+            rollback = false;
         }
         return this;
     }
@@ -213,6 +206,7 @@ public abstract class Context implements AutoCloseable {
             rollback();
     }
 
+    @Deprecated
     public <K, V extends OBJ<K>> V getAndClose(Class<V> clazz, K identity) {
         V value = get(clazz, identity);
         close();

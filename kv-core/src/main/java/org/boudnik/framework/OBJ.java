@@ -21,11 +21,6 @@ public interface OBJ<K> extends Serializable {
         Context.instance().delete(this);
     }
 
-// TODO: 04/30/2018
-//    default void revert() {
-//        Context.instance().revert(this);
-//    }
-
     @SuppressWarnings("unused")
     default void onCommit(Object current, Object memento) {
 

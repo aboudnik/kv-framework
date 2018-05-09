@@ -14,24 +14,29 @@ import static org.junit.Assert.assertNotNull;
 public class RollbackTest extends TransactionTest {
 
     private static final String SSN = "601-77-1234";
-    private Person person;
 
     @Test
     public void testCreateSaveUpdateRollback() {
 
         Context context = Context.instance();
-        person = new Person(SSN, "John", "Doe");
-        context.transaction(() -> person.save());
+
+        context.transaction(() -> new Person(SSN, "John", "Doe").save());
 
         try {
             context.transaction(() -> {
-                person = context.get(Person.class, SSN);
+                Person person = context.get(Person.class, SSN);
+                assertNotNull(person);
                 person.fname = "Lisa";
-                throw new RuntimeException();
+                throw new RuntimeException("Rollback Exception");
             });
-        } catch (RuntimeException ignored) {
+        } catch (RuntimeException e) {
+            assertEquals("Rollback Exception", e.getMessage());
         } finally {
-            assertEquals("John", context.getAndClose(Person.class, SSN).fname);
+            context.transaction(() -> {
+                Person person = context.get(Person.class, SSN);
+                assertNotNull(person);
+                assertEquals("John", person.fname);
+            });
         }
     }
 
@@ -39,16 +44,17 @@ public class RollbackTest extends TransactionTest {
     public void testCreateSaveDeleteRollback() {
 
         Context context = Context.instance();
-        person = new Person(SSN, "James", "Doe");
-        context.transaction(() -> person.save());
+        context.transaction(() -> new Person(SSN, "James", "Doe").save());
 
         try {
             context.transaction(() -> {
-                person = context.get(Person.class, SSN);
+                Person person = context.get(Person.class, SSN);
+                assertNotNull(person);
                 person.delete();
-                throw new RuntimeException();
+                throw new RuntimeException("Rollback Exception");
             });
-        } catch (RuntimeException ignored) {
+        } catch (RuntimeException e) {
+            assertEquals("Rollback Exception", e.getMessage());
         } finally {
             context.transaction(() -> assertNotNull(context.get(Person.class, SSN)));
         }
