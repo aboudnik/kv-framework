@@ -1,7 +1,6 @@
 package org.boudnik.framework;
 
 import java.io.Serializable;
-import java.util.NoSuchElementException;
 
 /**
  * @author Alexandre_Boudnik
@@ -9,31 +8,25 @@ import java.util.NoSuchElementException;
  */
 public interface OBJ<K> extends Serializable {
 
-    default K getKey() {
-        throw new NoSuchElementException("getKey");
-    }
+    K getKey();
 
-    default void setKey(K key) {
-//        throw new NoSuchElementException("setKey");
-    }
+    void setKey(K key);
 
     @SuppressWarnings("unchecked")
-    default <T> T save() {
-        return (T) Context.instance().save(this);
+    default <V extends OBJ<K>> V save() {
+        return (V) Context.instance().save(this);
     }
 
     default void delete() {
         Context.instance().delete(this);
     }
 
-    //  default void revert() {
-    //      Transaction.instance().revert(this);
-    //  }
-
+    @SuppressWarnings("unused")
     default void onCommit(Object current, Object memento) {
 
     }
 
+    @SuppressWarnings("unused")
     default void onRollback() {
 
     }
@@ -42,7 +35,7 @@ public interface OBJ<K> extends Serializable {
 
         private transient K key;
 
-        public Implementation() {
+        protected Implementation() {
         }
 
         protected Implementation(K key) {
@@ -61,46 +54,10 @@ public interface OBJ<K> extends Serializable {
 
     }
 
-/*    abstract class Historical<K> extends Implementation<K> {
-        static final String REF = Implementation.REF.class.getName();
-        List<History> history = new ArrayList<>();
-
-        public Historical(K key) {
-            super(key);
-        }
-
-        @Override
-        public void onCommit(BinaryObject instance, BinaryObject memento) {
-            for (String field : instance.type().fieldNames()) {
-                Object c = instance.field(field);
-                Object m = memento.field(field);
-                if (m == null) {
-                    if (c != null)
-                        System.out.printf("%s:%s = null%n", field, c);
-                } else if (!m.equals(c)) {
-                    if (m instanceof BinaryObject) {
-                        if (((BinaryObject) c).type().typeName().equals(REF)) {
-                            Object ci = getIdentity(c);
-                            Object mi = getIdentity(m);
-                            if (!ci.equals(mi))
-                                System.out.printf("%s:%s = %s%n", field, ci, mi);
-                        }
-                    } else
-                        System.out.printf("%s:%s = %s%n", field, c, m);
-                }
-            }
-        }
-    }
-
-    static Object getIdentity(Object o) {
-        return ((BinaryObject) o).field("identity");
-    }*/
-
-    class REF<I, V extends OBJ<I>> implements Serializable {
+    class REF<K, V extends OBJ<K>> implements Serializable {
         private final Class<V> clazz;
         private transient V reference;
-
-        private I identity;
+        private K identity;
 
         public REF(Class<V> clazz) {
             this.clazz = clazz;
@@ -132,7 +89,7 @@ public interface OBJ<K> extends Serializable {
             this.reference = reference;
         }
 
-        private void setIdentity(I identity) {
+        private void setIdentity(K identity) {
             this.identity = identity;
         }
 

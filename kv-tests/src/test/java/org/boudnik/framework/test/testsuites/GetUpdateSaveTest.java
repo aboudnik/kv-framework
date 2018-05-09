@@ -2,8 +2,9 @@ package org.boudnik.framework.test.testsuites;
 
 import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.MutableTestEntry;
-import org.junit.Assert;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class GetUpdateSaveTest extends TransactionTest {
 
@@ -12,51 +13,66 @@ public class GetUpdateSaveTest extends TransactionTest {
     @Test
     public void testGetUpdateSaveCommit() {
         Context tx = Context.instance();
-        tx.transaction(new MutableTestEntry("testGetUpdateSaveCommit"));
-
-        final MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveCommit");
-        Assert.assertNotNull(entry);
-        Assert.assertNull(entry.getValue());
+        tx.transaction(() -> new MutableTestEntry("testGetUpdateSaveCommit").save());
 
         tx.transaction(() -> {
+            final MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveCommit");
+            assertNotNull(entry);
+            assertNull(entry.getValue());
             entry.setValue(NEW_VALUE);
             entry.save();
         });
-        Assert.assertEquals(NEW_VALUE, tx.get(MutableTestEntry.class, "testGetUpdateSaveCommit").getValue());
+        tx.transaction(() -> {
+            MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveCommit");
+            assertNotNull(entry);
+            assertEquals(NEW_VALUE, entry.getValue());
+        });
     }
 
     @Test
     public void testGetUpdateSaveRollback() {
         Context tx = Context.instance();
-        tx.transaction(new MutableTestEntry("testGetUpdateSaveRollback"));
+        tx.transaction(() -> new MutableTestEntry("testGetUpdateSaveRollback").save());
 
-        final MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveRollback");
-        Assert.assertNotNull(entry);
-        Assert.assertNull(entry.getValue());
+        tx.transaction(() -> {
+            final MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveRollback");
+            assertNotNull(entry);
+            assertNull(entry.getValue());
 
-        entry.setValue(NEW_VALUE);
-        MutableTestEntry saveResult = entry.save();
-        Assert.assertNotNull(saveResult);
-        tx.rollback();
-        Assert.assertNull(tx.get(MutableTestEntry.class, "testGetUpdateSaveRollback").getValue());
+            entry.setValue(NEW_VALUE);
+            MutableTestEntry saveResult = entry.save();
+            assertNotNull(saveResult);
+            tx.rollback();
+        });
+        tx.transaction(() -> {
+            MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveRollback");
+            assertNotNull(entry);
+            assertNull(entry.getValue());
+        });
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testGetUpdateSaveRollbackViaException() {
         Context tx = Context.instance();
-        tx.transaction(new MutableTestEntry("testGetUpdateSaveRollback"));
+        tx.transaction(() -> new MutableTestEntry("testGetUpdateSaveRollback").save());
 
-        final MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveRollback");
-        Assert.assertNotNull(entry);
-        Assert.assertNull(entry.getValue());
         try {
             tx.transaction(() -> {
+                final MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveRollback");
+                assertNotNull(entry);
+                assertNull(entry.getValue());
                 entry.setValue(NEW_VALUE);
                 entry.save();
                 throw new RuntimeException("Rollback Exception");
             });
+        } catch (RuntimeException e) {
+            assertEquals("Rollback Exception", e.getMessage());
         } finally {
-            Assert.assertNull(tx.get(MutableTestEntry.class, "testGetUpdateSaveRollback").getValue());
+            tx.transaction(() -> {
+                MutableTestEntry entry = tx.get(MutableTestEntry.class, "testGetUpdateSaveRollback");
+                assertNotNull(entry);
+                assertNull(entry.getValue());
+            });
         }
     }
 }

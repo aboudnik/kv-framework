@@ -10,7 +10,8 @@ public class NullSaveTest extends TransactionTest {
     @Test(expected = NullPointerException.class)
     public void nullSaveTest() {
         Context tx = Context.instance();
-        TestEntry nullTestEntry = null;
-        tx.transaction(nullTestEntry);
+//        tx.get(null, null);
+        TestEntry nullTestEntry = new TestEntry(null);
+        tx.transaction(nullTestEntry::save);
     }
 }

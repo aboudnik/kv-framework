@@ -5,7 +5,8 @@ import org.boudnik.framework.test.core.RefTestEntry;
 import org.boudnik.framework.test.core.TestEntry;
 import org.junit.Test;
 
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.*;
+
 
 public class CreateSaveRefTest extends TransactionTest {
 
@@ -21,8 +22,10 @@ public class CreateSaveRefTest extends TransactionTest {
             assertSame(ref.getEntry(), entry);
         });
 
-        TestEntry actual = tx.get(TestEntry.class, "test");
-        TestEntry expected = ref.getEntry();
-        assertSame(actual, expected);
+        tx.transaction(() -> {
+            TestEntry actual = tx.get(TestEntry.class, "test");
+            TestEntry expected = ref.getEntry();
+            assertSame(actual, expected);
+        });
     }
 }

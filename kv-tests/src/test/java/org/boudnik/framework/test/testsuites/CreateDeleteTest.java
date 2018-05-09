@@ -2,8 +2,9 @@ package org.boudnik.framework.test.testsuites;
 
 import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.TestEntry;
-import org.junit.Assert;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class CreateDeleteTest extends TransactionTest {
 
@@ -15,21 +16,26 @@ public class CreateDeleteTest extends TransactionTest {
             te.save();
             te.delete();
         });
-        Assert.assertNull(tx.getAndClose(TestEntry.class, "testCreateDeleteCommit"));
+        tx.transaction(() -> assertNull(tx.get(TestEntry.class, "testCreateDeleteCommit")));
     }
 
     @Test
     public void testCreateDeleteRollback() {
         Context tx = Context.instance();
-        TestEntry te = new TestEntry("testCreateDeleteRollback");
-        TestEntry saveResult = te.save();
-        Assert.assertNotNull(saveResult);
-        te.delete();
-        tx.rollback();
-        Assert.assertNull(tx.getAndClose(TestEntry.class, "testCreateDeleteRollback"));
+        tx.transaction(() -> {
+            TestEntry te = new TestEntry("testCreateDeleteRollback");
+            TestEntry saveResult = te.save();
+            assertNotNull(saveResult);
+            te.delete();
+            tx.rollback();
+        });
+        tx.transaction(() -> {
+            TestEntry testCreateDeleteRollback = tx.get(TestEntry.class, "testCreateDeleteRollback");
+            assertNull(testCreateDeleteRollback);
+        });
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testCreateDeleteRollbackViaException() {
         Context tx = Context.instance();
         try {
@@ -39,8 +45,9 @@ public class CreateDeleteTest extends TransactionTest {
                 te.delete();
                 throw new RuntimeException("Rollback Exception");
             });
-        } finally {
-            Assert.assertNull(tx.getAndClose(TestEntry.class, "testCreateDeleteRollback"));
+        } catch (RuntimeException e) {
+            assertEquals("Rollback Exception", e.getMessage());
+            tx.transaction(() -> assertNull(tx.get(TestEntry.class, "testCreateDeleteRollback")));
         }
     }
 }

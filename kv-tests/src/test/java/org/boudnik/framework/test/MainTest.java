@@ -3,12 +3,13 @@ package org.boudnik.framework.test;
 import org.boudnik.framework.Context;
 import org.boudnik.framework.test.core.TestEntry;
 import org.boudnik.framework.test.testsuites.TransactionTest;
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Alexandre_Boudnik
@@ -34,7 +35,7 @@ public class MainTest extends TransactionTest {
 
         try {
             executor.awaitTermination(8, TimeUnit.SECONDS);
-            Assert.assertNotNull(Context.instance().get(TestEntry.class, "http://localhost/2"));
+            getContext().transaction(() -> assertNotNull(Context.instance().get(TestEntry.class, "http://localhost/2")));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

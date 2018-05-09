@@ -3,28 +3,53 @@ package org.boudnik.framework;
 import org.boudnik.framework.util.Beans;
 
 import javax.cache.Cache;
-import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * @author Alexandre_Boudnik
  * @since 11/15/2017
  */
 public abstract class Context implements AutoCloseable {
-    private final Map<Class<? extends OBJ>, Map<Object, OBJ>> scope = new HashMap<>();
-    private final Set<OBJ> deleted = new HashSet<>();
-    protected final Map<Class, BeanInfo> meta = new HashMap<>();
-    protected final Map<Object, Object> mementos = new HashMap<>();
+    protected final Beans beans = new Beans();
+    private boolean rollback = false;
 
-    public abstract <K, V extends OBJ> V get(Class<V> clazz, K identity);
+    enum State {
+        NEW,
+        CURRENT,
+        DEAD
+    }
 
-    protected abstract OBJ<Object> getMementoValue(Map.Entry<Object, Object> memento);
+    class Cell<V extends OBJ<?>> {
+        final V obj;
+        final V memento;
+        State state;
+
+        Cell(V obj, State state, V memento) {
+            this.obj = obj;
+            this.memento = memento;
+            this.state = state;
+        }
+
+        void revert() {
+            beans.set(memento, obj);
+        }
+
+        boolean isDirty() {
+            return !beans.equals(memento, obj);
+        }
+
+        void setDeleted() {
+            this.state = State.DEAD;
+        }
+    }
+
+    private final Map cells = new HashMap();
+    private int tranCount = 0;
+
+    protected abstract <K> Object getNative(Class<? extends OBJ> clazz, K identity) throws Exception;
 
     protected abstract void startTransactionIfNotStarted();
 
@@ -36,94 +61,135 @@ public abstract class Context implements AutoCloseable {
 
     protected abstract void engineSpecificClearAction();
 
-    protected abstract <K, V, T extends Cache<K, V>> T cache(Class<? extends OBJ> clazz);
+    public abstract <K, V extends OBJ<K>> Cache<K, V> cache(Class<? extends OBJ> clazz);
 
-    public OBJ save(OBJ obj) {
+    protected abstract <K, V extends OBJ<K>> V toObject(Object external, K identity);
+
+    private <K, V extends OBJ<K>> Cell<V> getCell(V obj) {
+        return this.<K, V>getMap(obj.getClass()).get(obj.getKey());
+    }
+
+    private <K, V extends OBJ<K>> Map<K, Cell<V>> getMap(Class<? extends OBJ> clazz) {
+        return this.<K, V>getScope().computeIfAbsent(clazz, cls -> new HashMap<>());
+    }
+
+    public final <K, V extends OBJ<K>> V get(Class<V> clazz, K key) {
+        if (tranCount == 0)
+            throw new TenacityException("get(class, key) has been called outside of transaction boundary");
+        Map<K, Cell<V>> map = getMap(clazz);
+        Cell<V> cell = map.get(key);
+        if (cell == null)
+            try {
+                Object external = getNative(clazz, key);
+                if (external == null)
+                    return null;
+                V v = toObject(external, key);
+                this.<K, V>getMap(v.getClass()).put(key, new Cell<>(v, State.CURRENT, beans.clone(v)));
+                return v;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        else
+            return cell.obj;
+    }
+
+    <K, V extends OBJ<K>> V save(V obj) {
+        if (tranCount == 0)
+            throw new TenacityException("save() has been called outside of transaction boundary");
         return save(obj, obj.getKey());
     }
 
-    public OBJ save(OBJ obj, Object key) {
+    private <K, V extends OBJ<K>> V save(V obj, K key) {
         if (key == null)
             throw new NullPointerException();
-        getMap(obj.getClass()).put(key, obj);
+        @SuppressWarnings("unchecked") Class<V> clazz = (Class<V>) obj.getClass();
+        Map<K, Cell<V>> map = getMap(clazz);
+        Cell<V> cell = map.get(key);
+        if (cell == null) {
+            V wasHere = get(clazz, key);
+            map.put(key, wasHere == null ? new Cell<>(obj, State.NEW, beans.clone(obj)) : new Cell<>(obj, State.CURRENT, wasHere));
+        }
         return obj;
     }
 
-    public void delete(OBJ obj) {
-        OBJ removed = getMap(obj.getClass()).remove(obj.getKey());
-        if (removed != null)
-            deleted.add(removed);
+    <K, V extends OBJ<K>> void delete(V obj) {
+        if (tranCount == 0)
+            throw new TenacityException("delete() has been called outside of transaction boundary");
+        getCell(obj).setDeleted();
     }
+
 
     @SuppressWarnings("unchecked")
-    protected void revert(OBJ obj) {
-//        unSave(obj);
-        //todo
-        cache(obj.getClass()).remove(obj.getKey());
+    private <K, V extends OBJ<K>> Map<Class<? extends OBJ>, Map<K, Cell<V>>> getScope() {
+        return (Map<Class<? extends OBJ>, Map<K, Cell<V>>>) cells;
     }
 
-    protected Map<Object, OBJ> getMap(Class<? extends OBJ> clazz) {
-        return scope.computeIfAbsent(clazz, k -> new HashMap<>());
+    private <K, V extends OBJ<K>> void commit() {
+        Set<K> toRemove = new HashSet<>();
+        Map<K, V> toPut = new HashMap<>();
+        for (Map.Entry<Class<? extends OBJ>, Map<K, Cell<V>>> byClass : this.<K, V>getScope().entrySet()) {
+            toRemove.clear();
+            toPut.clear();
+            Cache<K, V> cache = cache(byClass.getKey());
+            for (Map.Entry<K, Cell<V>> entry : byClass.getValue().entrySet()) {
+                K key = entry.getKey();
+                Cell<V> cell = entry.getValue();
+                if (cell.state == State.DEAD)
+                    toRemove.add(key);
+                else if (cell.state == State.NEW || cell.isDirty())
+                    toPut.put(key, cell.obj);
+            }
+            cache.removeAll(toRemove);
+            cache.putAll(toPut);
+        }
+        engineSpecificCommitAction();
     }
 
     public void rollback() {
-        try {
-            for (Map.Entry<Object, Object> memento : mementos.entrySet()) {
-                OBJ src = getMementoValue(memento);
-                Object dst = getMap(src.getClass()).get(memento.getKey());
-                if (dst != null)
-                    Beans.set(meta, src, dst);
-            }
-            engineSpecificRollbackAction();
-        } catch (IllegalAccessException | InvocationTargetException | IntrospectionException e) {
-            throw new RuntimeException(e);
-        } finally {
-            clear();
-        }
+        if (tranCount == 0)
+            throw new TenacityException("rollback() has been called outside of transaction boundary");
+        rollback = true;
+        tranCount = 0;
     }
 
-    private void commit() {
-        try {
-            for (Map.Entry<Class<? extends OBJ>, Map<Object, OBJ>> byClass : scope.entrySet()) {
-                cache(byClass.getKey()).putAll(byClass.getValue());
+    private <K, V extends OBJ<K>> void doRollback() {
+        for (Map.Entry<Class<? extends OBJ>, Map<K, Cell<V>>> byClass : this.<K, V>getScope().entrySet()) {
+            for (Map.Entry<K, Cell<V>> entry : byClass.getValue().entrySet()) {
+                entry.getValue().revert();
             }
-            for (Map.Entry<? extends Class<? extends OBJ>, Set<Object>> entry :
-                    deleted.stream().collect(Collectors.groupingBy(OBJ::getClass, Collectors.mapping(OBJ::getKey, Collectors.toSet()))).entrySet())
-            {
-                cache(entry.getKey()).removeAll(entry.getValue());
-            }
-            engineSpecificCommitAction();
-        } finally {
-            clear();
         }
+        engineSpecificRollbackAction();
+        cells.clear();
     }
 
+    @Deprecated
     public Context transaction(OBJ obj) {
         return transaction(obj::save);
     }
 
-    private void clear() {
-        engineSpecificClearAction();
-        scope.clear();
-        mementos.clear();
-        deleted.clear();
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T extends Context> T transaction(Transactionable transactionable) {
-        startTransactionIfNotStarted();
+    public Context transaction(Transactionable transactionable) {
         try {
+            tranCount = 1;
+            startTransactionIfNotStarted();
             transactionable.commit();
-            commit();
+            if (rollback)
+                doRollback();
+            else
+                commit();
         } catch (Exception e) {
-            rollback();
-            throw new RuntimeException(e);
+            doRollback();
+            throw e;
+        } finally {
+            engineSpecificClearAction();
+            cells.clear();
+            tranCount = 0;
+            rollback = false;
         }
-        return (T) this;
+        return this;
     }
 
     <K, V extends OBJ<K>> boolean isDeleted(V reference) {
-        return deleted.contains(reference);
+        return getScope().get(reference.getClass()).get(reference.getKey()).state == State.DEAD;
     }
 
     public static Context instance() {
@@ -136,22 +202,10 @@ public abstract class Context implements AutoCloseable {
             rollback();
     }
 
-    public <K, V extends OBJ> V getAndClose(Class<V> clazz, K identity) {
+    @Deprecated
+    public <K, V extends OBJ<K>> V getAndClose(Class<V> clazz, K identity) {
         V value = get(clazz, identity);
         close();
         return value;
-    }
-
-    @FunctionalInterface
-    protected interface Worker {
-        /**
-         * Performs this operation on the given arguments.
-         *
-         * @param c   class
-         * @param map (key -> value)
-         */
-//        <K, V>
-        void accept(Class<? extends OBJ> c, Map<Object, OBJ> map, boolean isTombstone) throws IllegalAccessException;
-
     }
 }

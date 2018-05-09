@@ -4,9 +4,7 @@ import org.boudnik.framework.util.Beans;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
-import java.beans.Introspector;
 import java.lang.reflect.InvocationTargetException;
 
 import static junit.framework.TestCase.assertTrue;
@@ -18,9 +16,9 @@ import static org.junit.Assert.assertFalse;
  */
 public class BeansTest {
 
-    private BeanInfo beanInfo;
+    private Beans beans = new Beans();
 
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings("WeakerAccess")
     public static class Bean<T> {
         private T foo;
 
@@ -42,28 +40,27 @@ public class BeansTest {
         b1.setFoo("b1");
         b2.setFoo("b2");
         b3.setFoo("b1");
-        beanInfo = Introspector.getBeanInfo(Bean.class);
     }
 
     @Test
     public void same() throws InvocationTargetException, IllegalAccessException {
-        assertTrue(Beans.isEquals(beanInfo, b1, b3));
+        assertTrue(beans.equals(b1, b3));
     }
 
     @Test
     public void reflection() throws InvocationTargetException, IllegalAccessException {
-        assertTrue(Beans.isEquals(beanInfo, b1, b1));
+        assertTrue(beans.equals(b1, b1));
     }
 
     @Test
     public void different() throws InvocationTargetException, IllegalAccessException {
-        assertFalse(Beans.isEquals(beanInfo, b1, b2));
+        assertFalse(beans.equals(b1, b2));
     }
 
     @Test
-    public void set() throws InvocationTargetException, IllegalAccessException {
-        Beans.set(beanInfo, b1, b2);
-        assertTrue(Beans.isEquals(beanInfo, b1, b2));
+    public void set() throws InvocationTargetException, IllegalAccessException, IntrospectionException {
+        beans.set(b1, b2);
+        assertTrue(beans.equals(b1, b2));
     }
 
 }

@@ -6,7 +6,7 @@ import java.util.Objects;
 
 public class ComplexTestEntry implements OBJ<OBJ<String>> {
 
-    private final TestEntry url;
+    private TestEntry url;
 
     private String value;
 
@@ -17,6 +17,11 @@ public class ComplexTestEntry implements OBJ<OBJ<String>> {
     @Override
     public TestEntry getKey() {
         return url;
+    }
+
+    @Override
+    public void setKey(OBJ<String> key) {
+        this.url = (TestEntry) key;
     }
 
     public String getValue() {
