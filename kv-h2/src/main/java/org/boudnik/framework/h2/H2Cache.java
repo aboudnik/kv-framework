@@ -27,9 +27,12 @@ class H2Cache<K, V> extends H2AbstractCache<K, V> {
     public void putAll(Map<? extends K, ? extends V> map) {
         try {
             for (Map.Entry<? extends K, ? extends V> entries : map.entrySet()) {
-                putPs.setObject(1, entries.getKey(), Types.JAVA_OBJECT);
+                K key = entries.getKey();
+                String keyStr = Utils.encode(key);
+                putPs.setObject(1, keyStr, Types.CHAR);
                 putPs.setObject(2, entries.getValue(), Types.JAVA_OBJECT);
                 putPs.addBatch();
+
             }
             putPs.executeBatch();
         } catch (Exception e) {
@@ -41,11 +44,12 @@ class H2Cache<K, V> extends H2AbstractCache<K, V> {
     public void removeAll(Set<? extends K> keys) {
         try {
             for (K key : keys) {
-                removePs.setObject(1, key, Types.JAVA_OBJECT);
+                String keyStr = Utils.encode(key);
+                removePs.setObject(1, keyStr, Types.CHAR);
                 removePs.addBatch();
             }
             removePs.executeBatch();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -54,9 +58,10 @@ class H2Cache<K, V> extends H2AbstractCache<K, V> {
     public boolean remove(K key) {
         int i;
         try {
-            removePs.setObject(1, key, Types.JAVA_OBJECT);
+            String keyStr = Utils.encode(key);
+            removePs.setObject(1, keyStr, Types.CHAR);
             i = removePs.executeUpdate();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
         return i != 0;

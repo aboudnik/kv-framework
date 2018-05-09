@@ -56,10 +56,12 @@ public class Initializer {
 
     @NotNull
     private static String createTable(Class aClass) {
-        return "CREATE TABLE IF NOT EXISTS " + aClass.getSimpleName() +
+        String tableName = aClass.getSimpleName();
+        return "CREATE TABLE IF NOT EXISTS " + tableName +
                 " (" +
-                "  key BLOB, " +
+                "  key CHAR NOT NULL, " +
                 "  value BLOB " +
-                ");";
+                "); " +
+                "CREATE UNIQUE INDEX IF NOT EXISTS " + tableName + "_key_uindex ON " + tableName + " (key);";
     }
 }
