@@ -4,9 +4,9 @@ import com.hazelcast.core.Hazelcast;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.boudnik.framework.TransactionFactory;
-import org.boudnik.framework.h2.H2Transaction;
-import org.boudnik.framework.hazelcast.HazelcastTransaction;
-import org.boudnik.framework.ignite.IgniteTransaction;
+import org.boudnik.framework.h2.H2Context;
+import org.boudnik.framework.hazelcast.HazelcastContext;
+import org.boudnik.framework.ignite.IgniteContext;
 import org.boudnik.framework.test.core.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -19,21 +19,21 @@ public class Initializer {
     private static final Class[] classes = {ComplexRefTestEntry.class, ComplexTestEntry.class, ComplexTestEntry2.class,
             MutableTestEntry.class, RefTestEntry.class, TestEntry.class, Person.class, ArrayTestEntry.class};
 
-    public static IgniteTransaction initIgnite() {
+    public static IgniteContext initIgnite() {
         setProvider("Ignite");
-        return TransactionFactory.getOrCreateTransaction(IgniteTransaction.class,
-                () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true)
+        return TransactionFactory.getOrCreateTransaction(IgniteContext.class,
+                () -> new IgniteContext(Ignition.getOrStart(new IgniteConfiguration())), true)
                 .withCache(classes);
     }
 
-    public static HazelcastTransaction initHazelcast() {
+    public static HazelcastContext initHazelcast() {
         setProvider("Hazelcast");
-        return TransactionFactory.getOrCreateTransaction(HazelcastTransaction.class,
-                () -> new HazelcastTransaction(Hazelcast.newHazelcastInstance()),
+        return TransactionFactory.getOrCreateTransaction(HazelcastContext.class,
+                () -> new HazelcastContext(Hazelcast.newHazelcastInstance()),
                 true);
     }
 
-    public static H2Transaction initH2() {
+    public static H2Context initH2() {
         try {
             Class.forName("org.h2.Driver");
             Connection connection =
@@ -48,7 +48,7 @@ public class Initializer {
             });
             statement.executeBatch();
             setProvider("H2");
-            return TransactionFactory.getOrCreateTransaction(H2Transaction.class, () -> new H2Transaction(connection), true);
+            return TransactionFactory.getOrCreateTransaction(H2Context.class, () -> new H2Context(connection), true);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

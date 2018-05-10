@@ -11,19 +11,19 @@ import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.spi.CachingProvider;
 
-public class HazelcastTransaction extends Context {
+public class HazelcastContext extends Context {
 
     private TransactionContext hazelcastTransactionContext;
     private final CachingProvider cachingProvider;
     private final CacheConfig config;
     private final HazelcastInstance hc;
 
-    public HazelcastTransaction(HazelcastInstance hc) {
+    public HazelcastContext(HazelcastInstance hc) {
         this(hc, new CacheConfig<>());
     }
 
     @SuppressWarnings("WeakerAccess")
-    public <K, V extends OBJ<K>> HazelcastTransaction(HazelcastInstance hc, CacheConfig<K, V> config) {
+    public <K, V extends OBJ<K>> HazelcastContext(HazelcastInstance hc, CacheConfig<K, V> config) {
         this.hc = hc;
         cachingProvider = HazelcastServerCachingProvider.createCachingProvider(hc);
         this.config = config;
@@ -72,7 +72,7 @@ public class HazelcastTransaction extends Context {
         return cache;
     }
 
-    public HazelcastTransaction tx() {
+    public HazelcastContext tx() {
         hazelcastTransactionContext = hc.newTransactionContext();
         hazelcastTransactionContext.beginTransaction();
         return this;

@@ -10,11 +10,11 @@ import javax.cache.Cache;
  * @author Alexandre_Boudnik
  * @since 11/15/2017
  */
-public class IgniteTransaction extends Context {
+public class IgniteContext extends Context {
 
     private final Ignite ignite;
 
-    public IgniteTransaction(Ignite ignite) {
+    public IgniteContext(Ignite ignite) {
         this.ignite = ignite;
     }
 
@@ -37,7 +37,7 @@ public class IgniteTransaction extends Context {
         return ignite.transactions().tx() != null;
     }
 
-    public IgniteTransaction withCache(Class... classes) {
+    public IgniteContext withCache(Class... classes) {
         for (Class clazz : classes) {
             ignite.getOrCreateCache(clazz.getName());
         }
@@ -62,7 +62,7 @@ public class IgniteTransaction extends Context {
         return ignite.cache(clazz.getName());
     }
 
-    public IgniteTransaction tx() {
+    public IgniteContext tx() {
         ignite.transactions().txStart();
         return this;
     }
