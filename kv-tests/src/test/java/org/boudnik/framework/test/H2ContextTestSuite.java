@@ -10,7 +10,7 @@ import org.junit.runner.RunWith;
 @SuiteClasses({"testsuites/*Test.class",
         "*Test.class",
 })
-public class H2TransactionTestSuite {
+public class H2ContextTestSuite {
     @BeforeClass
     public static void beforeAll() {
         TransactionTest.setProvider("H2");

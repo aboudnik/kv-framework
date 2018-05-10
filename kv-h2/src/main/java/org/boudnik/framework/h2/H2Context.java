@@ -8,11 +8,11 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.sql.*;
 
-public class H2Transaction extends Context {
+public class H2Context extends Context {
 
     private final Connection connection;
 
-    public H2Transaction(Connection connection) {
+    public H2Context(Connection connection) {
         this.connection = connection;
     }
 

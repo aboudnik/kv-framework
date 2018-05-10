@@ -3,7 +3,7 @@ package org.boudnik.framework.test.testsuites;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.boudnik.framework.TransactionFactory;
-import org.boudnik.framework.ignite.IgniteTransaction;
+import org.boudnik.framework.ignite.IgniteContext;
 import org.boudnik.framework.test.core.*;
 import org.junit.BeforeClass;
 
@@ -24,7 +24,7 @@ public class TransactionTest {
     public static void beforeAll() {
         if (getProvider() == null) {
             setProvider("Ignite");
-            TransactionFactory.getOrCreateTransaction(IgniteTransaction.class, () -> new IgniteTransaction(Ignition.getOrStart(new IgniteConfiguration())), true)
+            TransactionFactory.getOrCreateTransaction(IgniteContext.class, () -> new IgniteContext(Ignition.getOrStart(new IgniteConfiguration())), true)
                     .withCache(classes);
         }
     }

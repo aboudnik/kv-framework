@@ -10,7 +10,7 @@ import org.junit.runner.RunWith;
 @SuiteClasses({"testsuites/*Test.class",
         "*Test.class",
 })
-public class HazelcastTransactionTestSuite {
+public class HazelcastContextTestSuite {
 
     @BeforeClass
     public static void beforeAll() {

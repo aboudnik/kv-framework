@@ -5,9 +5,9 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        IgniteTransactionTestSuite.class,
-        HazelcastTransactionTestSuite.class,
-        H2TransactionTestSuite.class,
+        IgniteContextTestSuite.class,
+        HazelcastContextTestSuite.class,
+        H2ContextTestSuite.class,
 })
 public class AllProvidersTestSuite {
 }
