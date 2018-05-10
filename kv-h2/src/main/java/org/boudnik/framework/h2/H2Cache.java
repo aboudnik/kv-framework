@@ -64,7 +64,6 @@ class H2Cache<K, V> extends H2AbstractCache<K, V> {
         return i != 0;
     }
 
-
     private Map<QueryType, PreparedStatement> getPreparedStatement() {
         return context.getStatements().get(currentTable);
     }
