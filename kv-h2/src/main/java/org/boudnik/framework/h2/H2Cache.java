@@ -10,11 +10,11 @@ import java.util.Set;
 
 class H2Cache<K, V> extends H2AbstractCache<K, V> {
 
-    private final H2Context tx;
+    private final H2Context context;
     private final Class<? extends OBJ> currentTable;
 
-    H2Cache(H2Context tx, Class<? extends OBJ> clazz) {
-        this.tx = tx;
+    H2Cache(H2Context context, Class<? extends OBJ> clazz) {
+        this.context = context;
         currentTable = clazz;
     }
 
@@ -66,6 +66,6 @@ class H2Cache<K, V> extends H2AbstractCache<K, V> {
 
 
     private Map<Type, PreparedStatement> getPreparedStatement() {
-        return tx.getStatements().get(currentTable);
+        return context.getStatements().get(currentTable);
     }
 }
