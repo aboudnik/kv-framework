@@ -18,13 +18,13 @@ public class H2Context extends Context {
         this.connection = connection;
     }
 
-    enum Type {
+    enum QueryType {
         SELECT,
         DELETE,
         MERGE
     }
 
-    private final Map<Class<? extends OBJ>, Map<Type, PreparedStatement>> statements = new HashMap<>();
+    private final Map<Class<? extends OBJ>, Map<QueryType, PreparedStatement>> statements = new HashMap<>();
 
     public H2Context withTable(Class... classes) {
         for (Class aClass : classes) {
@@ -32,10 +32,10 @@ public class H2Context extends Context {
                 PreparedStatement select = connection.prepareStatement("SELECT value FROM " + aClass.getSimpleName() + " WHERE key = ?");
                 PreparedStatement delete = connection.prepareStatement("DELETE FROM " + aClass.getSimpleName() + " WHERE key = ?");
                 PreparedStatement merge = connection.prepareStatement("MERGE INTO " + aClass.getSimpleName() + " KEY(key) VALUES(?, ?)");
-                Map<Type, PreparedStatement> queries = new HashMap<>(3);
-                queries.put(Type.SELECT, select);
-                queries.put(Type.DELETE, delete);
-                queries.put(Type.MERGE, merge);
+                Map<QueryType, PreparedStatement> queries = new HashMap<>(3);
+                queries.put(QueryType.SELECT, select);
+                queries.put(QueryType.DELETE, delete);
+                queries.put(QueryType.MERGE, merge);
                 //noinspection unchecked
                 statements.put(aClass, queries);
             } catch (SQLException e) {
@@ -47,7 +47,7 @@ public class H2Context extends Context {
 
     @Override
     protected <K> Object getNative(Class<? extends OBJ> clazz, K identity) throws Exception {
-        PreparedStatement select = statements.get(clazz).get(Type.SELECT);
+        PreparedStatement select = statements.get(clazz).get(QueryType.SELECT);
         select.setObject(1, Utils.encode(identity), Types.CHAR);
         try (ResultSet resultSet = select.executeQuery()) {
             if (resultSet.next()) {
@@ -129,7 +129,7 @@ public class H2Context extends Context {
         return new H2Cache<>(this, clazz);
     }
 
-    Map<Class<? extends OBJ>, Map<Type, PreparedStatement>> getStatements() {
+    Map<Class<? extends OBJ>, Map<QueryType, PreparedStatement>> getStatements() {
         return statements;
     }
 
