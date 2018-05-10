@@ -2,6 +2,7 @@ package org.boudnik.framework.h2;
 
 import org.boudnik.framework.Context;
 import org.boudnik.framework.OBJ;
+import org.boudnik.framework.h2.Utils.QueryType;
 
 import javax.cache.Cache;
 import java.io.InputStream;
@@ -13,18 +14,11 @@ import java.util.Map;
 public class H2Context extends Context {
 
     private final Connection connection;
+    private final Map<Class<? extends OBJ>, Map<QueryType, PreparedStatement>> statements = new HashMap<>();
 
     public H2Context(Connection connection) {
         this.connection = connection;
     }
-
-    enum QueryType {
-        SELECT,
-        DELETE,
-        MERGE
-    }
-
-    private final Map<Class<? extends OBJ>, Map<QueryType, PreparedStatement>> statements = new HashMap<>();
 
     public H2Context withTable(Class... classes) {
         for (Class aClass : classes) {

@@ -1,7 +1,7 @@
 package org.boudnik.framework.h2;
 
 import org.boudnik.framework.OBJ;
-import org.boudnik.framework.h2.H2Context.QueryType;
+import org.boudnik.framework.h2.Utils.QueryType;
 
 import java.sql.PreparedStatement;
 import java.sql.Types;
