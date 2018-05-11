@@ -1,5 +1,6 @@
 package org.boudnik.framework.test;
 
+import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
@@ -22,14 +23,14 @@ public class Initializer {
     public static IgniteContext initIgnite() {
         setProvider("Ignite");
         return TransactionFactory.getOrCreateTransaction(IgniteContext.class,
-                () -> new IgniteContext(Ignition.getOrStart(new IgniteConfiguration())), true)
+                () -> new IgniteContext(Ignition.getOrStart(new IgniteConfiguration().setIgniteInstanceName("Test"))), true)
                 .withCache(classes);
     }
 
     public static HazelcastContext initHazelcast() {
         setProvider("Hazelcast");
         return TransactionFactory.getOrCreateTransaction(HazelcastContext.class,
-                () -> new HazelcastContext(Hazelcast.newHazelcastInstance()),
+                () -> new HazelcastContext(Hazelcast.getOrCreateHazelcastInstance(new Config("Test"))),
                 true);
     }
 

@@ -17,13 +17,15 @@ public class Utils {
         MERGE
     }
 
-    static <K> String encode(K key) throws IOException {
+    static String encode(Object key) {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
              ObjectOutput out = new ObjectOutputStream(bos)) {
             out.writeObject(key);
             out.flush();
             byte[] bytes = bos.toByteArray();
             return Base64.getEncoder().encodeToString(bytes);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }

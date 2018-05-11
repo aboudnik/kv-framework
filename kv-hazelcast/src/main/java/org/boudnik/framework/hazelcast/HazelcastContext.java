@@ -59,11 +59,6 @@ public class HazelcastContext extends Context {
     }
 
     @Override
-    protected <K> Object getNative(Class<? extends OBJ> clazz, K identity) {
-        return cache(clazz).get(identity);
-    }
-
-    @Override
     public  <K, V extends OBJ<K>> Cache<K, V> cache(Class<? extends OBJ> clazz) {
         CacheManager cacheManager = cachingProvider.getCacheManager();
         Cache<K, V> cache;

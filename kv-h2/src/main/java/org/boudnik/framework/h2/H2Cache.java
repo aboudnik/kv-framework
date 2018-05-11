@@ -3,19 +3,47 @@ package org.boudnik.framework.h2;
 import org.boudnik.framework.OBJ;
 import org.boudnik.framework.h2.Utils.QueryType;
 
+import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
 import java.util.Set;
 
-class H2Cache<K, V> extends H2AbstractCache<K, V> {
+class H2Cache<K, V extends OBJ<K>> extends H2AbstractCache<K, V> {
 
     private final H2Context context;
-    private final Class<? extends OBJ> currentTable;
+    private final Class<? extends OBJ> clazz;
 
     H2Cache(H2Context context, Class<? extends OBJ> clazz) {
         this.context = context;
-        currentTable = clazz;
+        this.clazz = clazz;
+    }
+
+    @Override
+    public V get(K key) {
+        try (ResultSet resultSet = getPreparedSelect(key).executeQuery()) {
+            if (resultSet.next()) {
+                try (InputStream binaryStream = resultSet.getBinaryStream(1);
+                     ObjectInputStream ois = new ObjectInputStream(binaryStream)) {
+                    @SuppressWarnings("unchecked") V v = (V) ois.readObject();
+                    v.setKey(key);
+                    return v;
+                }
+            } else {
+                return null;
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private PreparedStatement getPreparedSelect(K key) throws SQLException {
+        PreparedStatement select = getPreparedStatement().get(QueryType.SELECT);
+        select.setString(1, Utils.encode(key));
+        return select;
     }
 
     @Override
@@ -65,6 +93,6 @@ class H2Cache<K, V> extends H2AbstractCache<K, V> {
     }
 
     private Map<QueryType, PreparedStatement> getPreparedStatement() {
-        return context.getStatements().get(currentTable);
+        return context.getStatements().get(clazz);
     }
 }

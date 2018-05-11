@@ -53,11 +53,6 @@ public class IgniteContext extends Context {
     }
 
     @Override
-    protected <K> Object getNative(Class<? extends OBJ> clazz, K identity) {
-        return ignite.cache(clazz.getName()).get(identity);
-    }
-
-    @Override
     public <K, V extends OBJ<K>> Cache<K, V> cache(Class<? extends OBJ> clazz) {
         return ignite.cache(clazz.getName());
     }
