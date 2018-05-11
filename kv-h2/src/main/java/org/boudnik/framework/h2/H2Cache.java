@@ -1,40 +1,35 @@
 package org.boudnik.framework.h2;
 
 import org.boudnik.framework.OBJ;
+import org.boudnik.framework.h2.Utils.QueryType;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
 import java.util.Set;
 
 class H2Cache<K, V> extends H2AbstractCache<K, V> {
 
-    private final PreparedStatement removePs;
-    private final PreparedStatement putPs;
+    private final H2Context context;
+    private final Class<? extends OBJ> currentTable;
 
-    H2Cache(Connection connection, Class<? extends OBJ> clazz) {
-        try {
-            removePs = connection.prepareStatement("DELETE FROM " + clazz.getSimpleName() + " WHERE key = ?");
-            putPs = connection.prepareStatement("MERGE INTO " + clazz.getSimpleName() + " KEY(key) VALUES(?, ?)");
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+    H2Cache(H2Context context, Class<? extends OBJ> clazz) {
+        this.context = context;
+        currentTable = clazz;
     }
 
     @Override
     public void putAll(Map<? extends K, ? extends V> map) {
         try {
+            PreparedStatement merge = getPreparedStatement().get(QueryType.MERGE);
             for (Map.Entry<? extends K, ? extends V> entries : map.entrySet()) {
                 K key = entries.getKey();
                 String keyStr = Utils.encode(key);
-                putPs.setObject(1, keyStr, Types.CHAR);
-                putPs.setObject(2, entries.getValue(), Types.JAVA_OBJECT);
-                putPs.addBatch();
-
+                merge.setObject(1, keyStr, Types.CHAR);
+                merge.setObject(2, entries.getValue(), Types.JAVA_OBJECT);
+                merge.addBatch();
             }
-            putPs.executeBatch();
+            merge.executeBatch();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -42,13 +37,14 @@ class H2Cache<K, V> extends H2AbstractCache<K, V> {
 
     @Override
     public void removeAll(Set<? extends K> keys) {
+        PreparedStatement delete = getPreparedStatement().get(QueryType.DELETE);
         try {
             for (K key : keys) {
                 String keyStr = Utils.encode(key);
-                removePs.setObject(1, keyStr, Types.CHAR);
-                removePs.addBatch();
+                delete.setObject(1, keyStr, Types.CHAR);
+                delete.addBatch();
             }
-            removePs.executeBatch();
+            delete.executeBatch();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -57,13 +53,18 @@ class H2Cache<K, V> extends H2AbstractCache<K, V> {
     @Override
     public boolean remove(K key) {
         int i;
+        PreparedStatement delete = getPreparedStatement().get(QueryType.DELETE);
         try {
             String keyStr = Utils.encode(key);
-            removePs.setObject(1, keyStr, Types.CHAR);
-            i = removePs.executeUpdate();
+            delete.setObject(1, keyStr, Types.CHAR);
+            i = delete.executeUpdate();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
         return i != 0;
+    }
+
+    private Map<QueryType, PreparedStatement> getPreparedStatement() {
+        return context.getStatements().get(currentTable);
     }
 }

@@ -48,7 +48,9 @@ public class Initializer {
             });
             statement.executeBatch();
             setProvider("H2");
-            return TransactionFactory.getOrCreateTransaction(H2Context.class, () -> new H2Context(connection), true);
+            return TransactionFactory.getOrCreateTransaction(H2Context.class,
+                    () -> new H2Context(connection), true)
+                    .withTable(classes);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

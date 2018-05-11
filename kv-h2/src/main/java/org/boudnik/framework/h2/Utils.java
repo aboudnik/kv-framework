@@ -11,6 +11,12 @@ public class Utils {
     private Utils() {
     }
 
+    enum QueryType {
+        SELECT,
+        DELETE,
+        MERGE
+    }
+
     static <K> String encode(K key) throws IOException {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
              ObjectOutput out = new ObjectOutputStream(bos)) {
