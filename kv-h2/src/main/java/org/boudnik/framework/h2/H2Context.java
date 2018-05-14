@@ -19,6 +19,7 @@ public class H2Context extends Context {
         this.connection = connection;
     }
 
+    @Override
     public H2Context withCache(Class... classes) {
         for (Class clazz : classes) {
             try {

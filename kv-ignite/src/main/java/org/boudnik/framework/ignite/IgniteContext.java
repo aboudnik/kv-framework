@@ -37,6 +37,7 @@ public class IgniteContext extends Context {
         return ignite.transactions().tx() != null;
     }
 
+    @Override
     public IgniteContext withCache(Class... classes) {
         for (Class clazz : classes) {
             ignite.getOrCreateCache(clazz.getName());
