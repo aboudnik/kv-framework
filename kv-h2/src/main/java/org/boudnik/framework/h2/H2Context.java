@@ -19,7 +19,7 @@ public class H2Context extends Context {
         this.connection = connection;
     }
 
-    public H2Context withTable(Class... classes) {
+    public H2Context withCache(Class... classes) {
         for (Class clazz : classes) {
             try {
                 PreparedStatement select = connection.prepareStatement("SELECT value FROM " + clazz.getSimpleName() + " WHERE key = ?");

@@ -110,6 +110,8 @@ public abstract class Context implements AutoCloseable {
         return obj;
     }
 
+    public abstract Context withCache(Class... classes);
+
     <K, V extends OBJ<K>> void delete(V obj) {
         if (tranCount == 0)
             throw new TenacityException("delete() has been called outside of transaction boundary");

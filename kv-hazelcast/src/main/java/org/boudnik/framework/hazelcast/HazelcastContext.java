@@ -59,12 +59,18 @@ public class HazelcastContext extends Context {
     }
 
     @Override
-    public  <K, V extends OBJ<K>> Cache<K, V> cache(Class<? extends OBJ> clazz) {
+    public HazelcastContext withCache(Class... classes) {
         CacheManager cacheManager = cachingProvider.getCacheManager();
-        Cache<K, V> cache;
-        if ((cache = cacheManager.getCache(clazz.getName())) == null)
-            cache = cacheManager.createCache(clazz.getName(), getConfig());
-        return cache;
+        for (Class clazz : classes) {
+            if (cacheManager.getCache(clazz.getName()) == null)
+                cacheManager.createCache(clazz.getName(), getConfig());
+        }
+        return this;
+    }
+
+    @Override
+    public <K, V extends OBJ<K>> Cache<K, V> cache(Class<? extends OBJ> clazz) {
+        return cachingProvider.getCacheManager().getCache(clazz.getName());
     }
 
     public HazelcastContext tx() {
@@ -81,7 +87,7 @@ public class HazelcastContext extends Context {
         }
     }
 
-    private  <K, V extends OBJ<K>> CacheConfig<K, V> getConfig() {
+    private <K, V extends OBJ<K>> CacheConfig<K, V> getConfig() {
         //noinspection unchecked
         return config;
     }
