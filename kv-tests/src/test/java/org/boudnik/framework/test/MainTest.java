@@ -34,8 +34,8 @@ public class MainTest extends TransactionTest {
         }
 
         try {
-            executor.awaitTermination(8, TimeUnit.SECONDS);
-            getContext().transaction(() -> assertNotNull(Context.instance().get(TestEntry.class, "http://localhost/2")));
+            executor.awaitTermination(2, TimeUnit.SECONDS);
+            Context.instance().transaction(() -> assertNotNull(Context.instance().get(TestEntry.class, "http://localhost/2")));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
