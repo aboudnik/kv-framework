@@ -37,6 +37,7 @@ public class IgniteContext extends Context {
         return ignite.transactions().tx() != null;
     }
 
+    @Override
     public IgniteContext withCache(Class... classes) {
         for (Class clazz : classes) {
             ignite.getOrCreateCache(clazz.getName());
@@ -50,11 +51,6 @@ public class IgniteContext extends Context {
         V v = beans.clone((V) external);
         v.setKey(identity);
         return v;
-    }
-
-    @Override
-    protected <K> Object getNative(Class<? extends OBJ> clazz, K identity) {
-        return ignite.cache(clazz.getName()).get(identity);
     }
 
     @Override

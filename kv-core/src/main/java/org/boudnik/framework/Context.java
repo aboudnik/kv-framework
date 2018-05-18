@@ -49,8 +49,6 @@ public abstract class Context implements AutoCloseable {
     private final Map cells = new HashMap();
     private int tranCount = 0;
 
-    protected abstract <K> Object getNative(Class<? extends OBJ> clazz, K identity) throws Exception;
-
     protected abstract void startTransactionIfNotStarted();
 
     protected abstract boolean isTransactionExist();
@@ -80,7 +78,7 @@ public abstract class Context implements AutoCloseable {
         Cell<V> cell = map.get(key);
         if (cell == null)
             try {
-                Object external = getNative(clazz, key);
+                Object external = cache(clazz).get(key);
                 if (external == null)
                     return null;
                 V v = toObject(external, key);
@@ -111,6 +109,8 @@ public abstract class Context implements AutoCloseable {
         }
         return obj;
     }
+
+    public abstract Context withCache(Class... classes);
 
     <K, V extends OBJ<K>> void delete(V obj) {
         if (tranCount == 0)

@@ -10,20 +10,24 @@ import org.boudnik.framework.OBJ;
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.spi.CachingProvider;
+import java.util.HashMap;
+import java.util.Map;
 
-public class HazelcastContext extends Context {
+public class HazelcastContext_3_9 extends Context {
 
     private TransactionContext hazelcastTransactionContext;
     private final CachingProvider cachingProvider;
     private final CacheConfig config;
     private final HazelcastInstance hc;
+    private static Map<String, Cache> caches = new HashMap<>();
 
-    public HazelcastContext(HazelcastInstance hc) {
+
+    public HazelcastContext_3_9(HazelcastInstance hc) {
         this(hc, new CacheConfig<>());
     }
 
     @SuppressWarnings("WeakerAccess")
-    public <K, V extends OBJ<K>> HazelcastContext(HazelcastInstance hc, CacheConfig<K, V> config) {
+    public <K, V extends OBJ<K>> HazelcastContext_3_9(HazelcastInstance hc, CacheConfig<K, V> config) {
         this.hc = hc;
         cachingProvider = HazelcastServerCachingProvider.createCachingProvider(hc);
         this.config = config;
@@ -59,21 +63,22 @@ public class HazelcastContext extends Context {
     }
 
     @Override
-    public HazelcastContext withCache(Class... classes) {
+    public HazelcastContext_3_9 withCache(Class... classes) {
         CacheManager cacheManager = cachingProvider.getCacheManager();
         for (Class clazz : classes) {
-            if (cacheManager.getCache(clazz.getName()) == null)
-                cacheManager.createCache(clazz.getName(), getConfig());
+            if (caches.get(clazz.getName()) == null) {
+                caches.put(clazz.getName(), cacheManager.createCache(clazz.getName(), getConfig()));
+            }
         }
         return this;
     }
 
     @Override
     public <K, V extends OBJ<K>> Cache<K, V> cache(Class<? extends OBJ> clazz) {
-        return cachingProvider.getCacheManager().getCache(clazz.getName());
+        return caches.get(clazz.getName());
     }
 
-    public HazelcastContext tx() {
+    public HazelcastContext_3_9 tx() {
         hazelcastTransactionContext = hc.newTransactionContext();
         hazelcastTransactionContext.beginTransaction();
         return this;

@@ -1,11 +1,13 @@
 package org.boudnik.framework.test;
 
+import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.boudnik.framework.TransactionFactory;
 import org.boudnik.framework.h2.H2Context;
 import org.boudnik.framework.hazelcast.HazelcastContext;
+import org.boudnik.framework.hazelcast.HazelcastContext_3_9;
 import org.boudnik.framework.ignite.IgniteContext;
 import org.boudnik.framework.test.core.*;
 import org.jetbrains.annotations.NotNull;
@@ -19,25 +21,34 @@ public class Initializer {
     private static final Class[] classes = {ComplexRefTestEntry.class, ComplexTestEntry.class, ComplexTestEntry2.class,
             MutableTestEntry.class, RefTestEntry.class, TestEntry.class, Person.class, ArrayTestEntry.class};
 
+    private static final String INIT_NAME = "Test";
+
     public static IgniteContext initIgnite() {
         setProvider("Ignite");
         return TransactionFactory.getOrCreateTransaction(IgniteContext.class,
-                () -> new IgniteContext(Ignition.getOrStart(new IgniteConfiguration())), true)
+                () -> new IgniteContext(Ignition.getOrStart(new IgniteConfiguration().setIgniteInstanceName(INIT_NAME))), true)
                 .withCache(classes);
+    }
+
+    public static HazelcastContext_3_9 initHazelcast_3_9() {
+        setProvider("Hazelcast_3_9");
+        return TransactionFactory.getOrCreateTransaction(HazelcastContext_3_9.class,
+                () -> new HazelcastContext_3_9(Hazelcast.getOrCreateHazelcastInstance(new Config(INIT_NAME))),
+                true).withCache(classes);
     }
 
     public static HazelcastContext initHazelcast() {
         setProvider("Hazelcast");
         return TransactionFactory.getOrCreateTransaction(HazelcastContext.class,
-                () -> new HazelcastContext(Hazelcast.newHazelcastInstance()),
-                true);
+                () -> new HazelcastContext(Hazelcast.getOrCreateHazelcastInstance(new Config(INIT_NAME))),
+                true).withCache(classes);
     }
 
     public static H2Context initH2() {
         try {
             Class.forName("org.h2.Driver");
             Connection connection =
-                    DriverManager.getConnection("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", "", "");
+                    DriverManager.getConnection("jdbc:h2:mem:" + INIT_NAME + ";DB_CLOSE_DELAY=-1", "", "");
             Statement statement = connection.createStatement();
             Arrays.stream(classes).forEach(aClass -> {
                 try {
@@ -50,7 +61,7 @@ public class Initializer {
             setProvider("H2");
             return TransactionFactory.getOrCreateTransaction(H2Context.class,
                     () -> new H2Context(connection), true)
-                    .withTable(classes);
+                    .withCache(classes);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
