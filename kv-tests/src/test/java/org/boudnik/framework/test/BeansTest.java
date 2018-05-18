@@ -1,11 +1,8 @@
-package org.boudnik.framework;
+package org.boudnik.framework.test;
 
 import org.boudnik.framework.util.Beans;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.beans.IntrospectionException;
-import java.lang.reflect.InvocationTargetException;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertFalse;
@@ -36,29 +33,29 @@ public class BeansTest {
     private Bean<String> b3 = new Bean<>();
 
     @Before
-    public void setUp() throws IntrospectionException {
+    public void setUp() {
         b1.setFoo("b1");
         b2.setFoo("b2");
         b3.setFoo("b1");
     }
 
     @Test
-    public void same() throws InvocationTargetException, IllegalAccessException {
+    public void same() {
         assertTrue(beans.equals(b1, b3));
     }
 
     @Test
-    public void reflection() throws InvocationTargetException, IllegalAccessException {
+    public void reflection() {
         assertTrue(beans.equals(b1, b1));
     }
 
     @Test
-    public void different() throws InvocationTargetException, IllegalAccessException {
+    public void different() {
         assertFalse(beans.equals(b1, b2));
     }
 
     @Test
-    public void set() throws InvocationTargetException, IllegalAccessException, IntrospectionException {
+    public void set() {
         beans.set(b1, b2);
         assertTrue(beans.equals(b1, b2));
     }
