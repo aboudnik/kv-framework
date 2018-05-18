@@ -14,7 +14,7 @@ public class HazelcastContextTestSuite {
 
     @BeforeClass
     public static void beforeAll() {
-        TransactionTest.setProvider("Hazelcast");
-        Initializer.initHazelcast();
+        TransactionTest.setProvider("Hazelcast_3_9");
+        Initializer.initHazelcast_3_9();
     }
 }

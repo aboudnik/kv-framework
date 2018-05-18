@@ -7,6 +7,7 @@ import org.apache.ignite.configuration.IgniteConfiguration;
 import org.boudnik.framework.TransactionFactory;
 import org.boudnik.framework.h2.H2Context;
 import org.boudnik.framework.hazelcast.HazelcastContext;
+import org.boudnik.framework.hazelcast.HazelcastContext_3_9;
 import org.boudnik.framework.ignite.IgniteContext;
 import org.boudnik.framework.test.core.*;
 import org.jetbrains.annotations.NotNull;
@@ -27,6 +28,13 @@ public class Initializer {
         return TransactionFactory.getOrCreateTransaction(IgniteContext.class,
                 () -> new IgniteContext(Ignition.getOrStart(new IgniteConfiguration().setIgniteInstanceName(INIT_NAME))), true)
                 .withCache(classes);
+    }
+
+    public static HazelcastContext_3_9 initHazelcast_3_9() {
+        setProvider("Hazelcast_3_9");
+        return TransactionFactory.getOrCreateTransaction(HazelcastContext_3_9.class,
+                () -> new HazelcastContext_3_9(Hazelcast.getOrCreateHazelcastInstance(new Config(INIT_NAME))),
+                true).withCache(classes);
     }
 
     public static HazelcastContext initHazelcast() {

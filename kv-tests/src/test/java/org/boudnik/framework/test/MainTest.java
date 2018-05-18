@@ -48,6 +48,8 @@ public class MainTest extends TransactionTest {
                 return Initializer.initIgnite();
             case "Hazelcast":
                 return Initializer.initHazelcast();
+            case "Hazelcast_3_9":
+                return Initializer.initHazelcast_3_9();
             case "H2":
                 return Initializer.initH2();
             default:
