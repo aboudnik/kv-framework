@@ -15,7 +15,7 @@
     <version>${kv.version}</version>
 
     <properties>
-        <hazelcast.version>3.9.3</hazelcast.version>
+        <hazelcast.version>4.0.5</hazelcast.version>
         <hazelcast-client.version>3.9.3</hazelcast-client.version>
     </properties>
 
